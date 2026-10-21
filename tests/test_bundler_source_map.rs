@@ -1,6 +1,6 @@
 #![cfg(feature = "bundler")]
 
-use lightningcss::{
+use rspack_lightningcss::{
   bundler::{Bundler, ResolveResult, SourceProvider},
   printer::{OriginalLocation, SourceMap},
   rules::CssRule,

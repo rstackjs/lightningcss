@@ -1,6 +1,6 @@
 use criterion::black_box;
-use rspack_lightningcss::stylesheet::{MinifyOptions, ParserOptions, PrinterOptions, StyleSheet};
 use parcel_sourcemap::SourceMap;
+use rspack_lightningcss::stylesheet::{MinifyOptions, ParserOptions, PrinterOptions, StyleSheet};
 use std::fmt::Write;
 
 pub struct Fixture {
