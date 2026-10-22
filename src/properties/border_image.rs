@@ -293,12 +293,21 @@ impl<'i> BorderImage<'i> {
     repeat: &BorderImageRepeat,
     dest: &mut PrinterT,
   ) -> Result<(), PrinterError> {
-    if *source != Image::default() {
-      source.to_css(dest)?;
-    }
+    let has_source = *source != Image::default();
     let has_slice = *slice != BorderImageSlice::default();
     let has_width = *width != Rect::all(BorderImageSideWidth::default());
     let has_outset = *outset != Rect::all(NonNegative(LengthOrNumber::Number(0.0)));
+    let has_repeat = *repeat != BorderImageRepeat::default();
+
+    // A shorthand with only initial components must still have a value.
+    if !has_source && !has_slice && !has_width && !has_outset && !has_repeat {
+      dest.write_str("none")?;
+      return Ok(());
+    }
+
+    if has_source {
+      source.to_css(dest)?;
+    }
     if has_slice || has_width || has_outset {
       dest.write_str(" ")?;
       slice.to_css(dest)?;
@@ -315,7 +324,7 @@ impl<'i> BorderImage<'i> {
       }
     }
 
-    if *repeat != BorderImageRepeat::default() {
+    if has_repeat {
       dest.write_str(" ")?;
       repeat.to_css(dest)?;
     }
