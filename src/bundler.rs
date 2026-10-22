@@ -13,7 +13,7 @@
 //!
 //! ```no_run
 //! use std::path::Path;
-//! use lightningcss::{
+//! use rspack_lightningcss::{
 //!   bundler::{Bundler, FileProvider},
 //!   stylesheet::ParserOptions
 //! };
@@ -106,10 +106,7 @@ pub enum ResolveResult {
   /// An external URL.
   External(String),
   /// A file path.
-  #[cfg_attr(
-    any(feature = "serde", feature = "nodejs"),
-    serde(untagged)
-  )]
+  #[cfg_attr(any(feature = "serde", feature = "nodejs"), serde(untagged))]
   File(PathBuf),
 }
 
