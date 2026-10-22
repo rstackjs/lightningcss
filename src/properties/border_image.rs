@@ -4,7 +4,6 @@ use crate::context::PropertyHandlerContext;
 use crate::declaration::{DeclarationBlock, DeclarationList};
 use crate::error::{ParserError, PrinterError};
 use crate::prefixes::Feature;
-use crate::printer::Printer;
 use crate::properties::{Property, PropertyId, VendorPrefix};
 use crate::targets::{Browsers, Targets};
 use crate::traits::{IsCompatible, Parse, PropertyHandler, Shorthand, ToCss};
@@ -83,10 +82,7 @@ impl<'i> Parse<'i> for BorderImageRepeat {
 }
 
 impl ToCss for BorderImageRepeat {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.horizontal.to_css(dest)?;
     if self.horizontal != self.vertical {
       dest.write_str(" ")?;
@@ -170,10 +166,7 @@ impl<'i> Parse<'i> for BorderImageSlice {
 }
 
 impl ToCss for BorderImageSlice {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.offsets.to_css(dest)?;
     if self.fill {
       dest.write_str(" fill")?;
@@ -292,23 +285,29 @@ impl<'i> BorderImage<'i> {
     }
   }
 
-  pub(crate) fn to_css_internal<W>(
+  pub(crate) fn to_css_internal<PrinterT: crate::printer::PrinterTrait>(
     source: &Image<'i>,
     slice: &BorderImageSlice,
     width: &Rect<BorderImageSideWidth>,
     outset: &Rect<NonNegative<LengthOrNumber>>,
     repeat: &BorderImageRepeat,
-    dest: &mut Printer<W>,
-  ) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
-    if *source != Image::default() {
-      source.to_css(dest)?;
-    }
+    dest: &mut PrinterT,
+  ) -> Result<(), PrinterError> {
+    let has_source = *source != Image::default();
     let has_slice = *slice != BorderImageSlice::default();
     let has_width = *width != Rect::all(BorderImageSideWidth::default());
     let has_outset = *outset != Rect::all(NonNegative(LengthOrNumber::Number(0.0)));
+    let has_repeat = *repeat != BorderImageRepeat::default();
+
+    // A shorthand with only initial components must still have a value.
+    if !has_source && !has_slice && !has_width && !has_outset && !has_repeat {
+      dest.write_str("none")?;
+      return Ok(());
+    }
+
+    if has_source {
+      source.to_css(dest)?;
+    }
     if has_slice || has_width || has_outset {
       dest.write_str(" ")?;
       slice.to_css(dest)?;
@@ -325,7 +324,7 @@ impl<'i> BorderImage<'i> {
       }
     }
 
-    if *repeat != BorderImageRepeat::default() {
+    if has_repeat {
       dest.write_str(" ")?;
       repeat.to_css(dest)?;
     }
@@ -335,10 +334,7 @@ impl<'i> BorderImage<'i> {
 }
 
 impl<'i> ToCss for BorderImage<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     BorderImage::to_css_internal(&self.source, &self.slice, &self.width, &self.outset, &self.repeat, dest)
   }
 }
