@@ -15,7 +15,7 @@ use crate::selector::{Direction, PseudoClass};
 use crate::targets::Targets;
 use crate::values::ident::Ident;
 use crate::vendor_prefix::VendorPrefix;
-use parcel_selectors::parser::Component;
+use rspack_lightningcss_selectors::parser::Component;
 
 #[derive(Debug)]
 pub(crate) struct SupportsEntry<'i> {

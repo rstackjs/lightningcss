@@ -69,7 +69,7 @@ pub use crate::printer::PseudoClasses;
   derive(schemars::JsonSchema),
   schemars(rename = "StyleSheet", bound = "T: schemars::JsonSchema")
 )]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct StyleSheet<'i, T = DefaultAtRule> {
   /// A list of top-level rules within the style sheet.
   #[cfg_attr(feature = "serde", serde(borrow))]
@@ -412,7 +412,7 @@ where
 /// assert_eq!(res.code, "color: #ff0; font-family: Helvetica");
 /// ```
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct StyleAttribute<'i> {
   /// The declarations in the style attribute.
   pub declarations: DeclarationBlock<'i>,

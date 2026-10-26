@@ -7,23 +7,23 @@ use napi_derive::js_function;
 
 #[js_function(1)]
 fn transform(ctx: CallContext) -> napi::Result<JsUnknown> {
-  lightningcss_napi::transform(ctx)
+  rspack_lightningcss_napi::transform(ctx)
 }
 
 #[js_function(1)]
 fn transform_style_attribute(ctx: CallContext) -> napi::Result<JsUnknown> {
-  lightningcss_napi::transform_style_attribute(ctx)
+  rspack_lightningcss_napi::transform_style_attribute(ctx)
 }
 
 #[js_function(1)]
 fn bundle(ctx: CallContext) -> napi::Result<JsUnknown> {
-  lightningcss_napi::bundle(ctx)
+  rspack_lightningcss_napi::bundle(ctx)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[js_function(1)]
 fn bundle_async(ctx: CallContext) -> napi::Result<JsObject> {
-  lightningcss_napi::bundle_async(ctx)
+  rspack_lightningcss_napi::bundle_async(ctx)
 }
 
 #[cfg_attr(not(target_arch = "wasm32"), napi_derive::module_exports)]

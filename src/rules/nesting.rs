@@ -19,7 +19,7 @@ use crate::visitor::Visit;
 #[cfg_attr(feature = "visitor", derive(Visit))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct NestingRule<'i, R = DefaultAtRule> {
   /// The style rule that defines the selector and declarations for the `@nest` rule.
   #[cfg_attr(feature = "serde", serde(borrow))]
@@ -54,7 +54,7 @@ impl<'a, 'i, T: ToCss> ToCss for NestingRule<'i, T> {
 #[cfg_attr(feature = "visitor", derive(Visit))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct NestedDeclarationsRule<'i> {
   /// The style rule that defines the selector and declarations for the `@nest` rule.
   #[cfg_attr(feature = "serde", serde(borrow))]
@@ -113,8 +113,11 @@ impl<'i> ToCss for NestedDeclarationsRule<'i> {
       }
     }
 
-    self
-      .declarations
-      .to_css_declarations(dest, false, &parcel_selectors::SelectorList(SmallVec::new()), 0)
+    self.declarations.to_css_declarations(
+      dest,
+      false,
+      &rspack_lightningcss_selectors::SelectorList(SmallVec::new()),
+      0,
+    )
   }
 }

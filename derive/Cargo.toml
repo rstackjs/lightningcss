@@ -1,11 +1,11 @@
 [package]
 authors = ["Devon Govett <devongovett@gmail.com>"]
-name = "lightningcss-derive"
+name = "rspack-lightningcss-derive"
 description = "Derive macros for lightningcss"
-version = "1.0.0-alpha.43"
+version.workspace = true
 license = "MPL-2.0"
 edition = "2021"
-repository = "https://github.com/parcel-bundler/lightningcss"
+repository.workspace = true
 
 [lib]
 proc-macro = true

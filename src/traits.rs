@@ -12,7 +12,7 @@ use crate::vendor_prefix::VendorPrefix;
 use cssparser::*;
 
 #[cfg(feature = "into_owned")]
-pub use static_self::IntoOwned;
+pub use rspack_lightningcss_static_self::IntoOwned;
 
 /// Trait for things that can be parsed from CSS syntax.
 pub trait Parse<'i>: Sized {
@@ -31,7 +31,7 @@ pub trait Parse<'i>: Sized {
   }
 }
 
-pub(crate) use lightningcss_derive::Parse;
+pub(crate) use rspack_lightningcss_derive::Parse;
 
 /// Trait for numeric values whose grammar can restrict their allowed range.
 pub trait ParseNumeric<'i>: Parse<'i> {
@@ -101,7 +101,7 @@ pub trait ToCss {
   }
 }
 
-pub(crate) use lightningcss_derive::ToCss;
+pub(crate) use rspack_lightningcss_derive::ToCss;
 
 impl<'a, T> ToCss for &'a T
 where

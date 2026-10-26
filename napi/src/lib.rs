@@ -1,19 +1,19 @@
 #[cfg(feature = "bundler")]
 use at_rule_parser::AtRule;
 use at_rule_parser::{CustomAtRuleConfig, CustomAtRuleParser};
-use lightningcss::bundler::BundleErrorKind;
-#[cfg(feature = "bundler")]
-use lightningcss::bundler::{Bundler, SourceProvider};
-use lightningcss::css_modules::{CssModuleExports, CssModuleReferences, PatternParseError};
-use lightningcss::dependencies::{Dependency, DependencyOptions};
-use lightningcss::error::{Error, ErrorLocation, MinifyErrorKind, ParserError, PrinterErrorKind};
-use lightningcss::stylesheet::{
-  MinifyOptions, ParserFlags, ParserOptions, PrinterOptions, PseudoClasses, StyleAttribute, StyleSheet,
-};
-use lightningcss::targets::{Browsers, Features, Targets};
 use napi::bindgen_prelude::{FromNapiValue, ToNapiValue};
 use napi::{CallContext, Env, JsObject, JsUnknown};
 use parcel_sourcemap::SourceMap;
+use rspack_lightningcss::bundler::BundleErrorKind;
+#[cfg(feature = "bundler")]
+use rspack_lightningcss::bundler::{Bundler, SourceProvider};
+use rspack_lightningcss::css_modules::{CssModuleExports, CssModuleReferences, PatternParseError};
+use rspack_lightningcss::dependencies::{Dependency, DependencyOptions};
+use rspack_lightningcss::error::{Error, ErrorLocation, MinifyErrorKind, ParserError, PrinterErrorKind};
+use rspack_lightningcss::stylesheet::{
+  MinifyOptions, ParserFlags, ParserOptions, PrinterOptions, PseudoClasses, StyleAttribute, StyleSheet,
+};
+use rspack_lightningcss::targets::{Browsers, Features, Targets};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, RwLock};
@@ -33,7 +33,7 @@ use transformer::JsVisitor;
 struct JsVisitor;
 
 #[cfg(feature = "visitor")]
-use lightningcss::visitor::Visit;
+use rspack_lightningcss::visitor::Visit;
 
 use utils::get_named_property;
 
@@ -121,8 +121,8 @@ pub fn transform_style_attribute(ctx: CallContext) -> napi::Result<JsUnknown> {
 mod bundle {
   use super::*;
   use crossbeam_channel::{self, Receiver, Sender};
-  use lightningcss::bundler::{FileProvider, ResolveResult};
   use napi::{Env, JsFunction, JsString, NapiRaw};
+  use rspack_lightningcss::bundler::{FileProvider, ResolveResult};
   use std::path::Path;
 
   use std::sync::Mutex;
@@ -422,8 +422,8 @@ mod bundle {
 #[cfg(target_arch = "wasm32")]
 mod bundle {
   use super::*;
-  use lightningcss::bundler::ResolveResult;
   use napi::{Env, JsFunction, JsString, NapiRaw, NapiValue, Ref};
+  use rspack_lightningcss::bundler::ResolveResult;
   use std::cell::UnsafeCell;
   use std::path::Path;
 
@@ -716,11 +716,11 @@ fn compile<'i>(
         flags,
         css_modules: if let Some(css_modules) = &config.css_modules {
           match css_modules {
-            CssModulesOption::Bool(true) => Some(lightningcss::css_modules::Config::default()),
+            CssModulesOption::Bool(true) => Some(rspack_lightningcss::css_modules::Config::default()),
             CssModulesOption::Bool(false) => None,
-            CssModulesOption::Config(c) => Some(lightningcss::css_modules::Config {
+            CssModulesOption::Config(c) => Some(rspack_lightningcss::css_modules::Config {
               pattern: if let Some(pattern) = c.pattern.as_ref() {
-                match lightningcss::css_modules::Pattern::parse(pattern) {
+                match rspack_lightningcss::css_modules::Pattern::parse(pattern) {
                   Ok(p) => p,
                   Err(e) => return Err(CompileError::PatternError(e)),
                 }
@@ -849,11 +849,11 @@ fn compile_bundle<'i, 'o, P: SourceProvider, F: FnOnce(&mut StyleSheet<'i, AtRul
       flags,
       css_modules: if let Some(css_modules) = &config.css_modules {
         match css_modules {
-          CssModulesOption::Bool(true) => Some(lightningcss::css_modules::Config::default()),
+          CssModulesOption::Bool(true) => Some(rspack_lightningcss::css_modules::Config::default()),
           CssModulesOption::Bool(false) => None,
-          CssModulesOption::Config(c) => Some(lightningcss::css_modules::Config {
+          CssModulesOption::Config(c) => Some(rspack_lightningcss::css_modules::Config {
             pattern: if let Some(pattern) = c.pattern.as_ref() {
-              match lightningcss::css_modules::Pattern::parse(pattern) {
+              match rspack_lightningcss::css_modules::Pattern::parse(pattern) {
                 Ok(p) => p,
                 Err(e) => return Err(CompileError::PatternError(e)),
               }
