@@ -1,0 +1,5 @@
+packages:
+  - '.agents/skills/*'
+
+# Skills keep their own lockfiles alongside the existing Yarn-managed packages.
+sharedWorkspaceLockfile: false
