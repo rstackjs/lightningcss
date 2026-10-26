@@ -9,7 +9,7 @@ use rspack_lightningcss::{
 };
 
 fn minify_test(source: &str, expected: &str) {
-  let mut stylesheet = StyleSheet::parse_with(&source, ParserOptions::default(), &mut TestAtRuleParser).unwrap();
+  let mut stylesheet = StyleSheet::parse_with(source, ParserOptions::default(), &mut TestAtRuleParser).unwrap();
   stylesheet.minify(Default::default()).unwrap();
   let res = stylesheet
     .to_css(

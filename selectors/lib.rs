@@ -3,7 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 // Make |cargo bench| work.
-#![cfg_attr(feature = "bench", feature(test))]
+#![cfg_attr(all(feature = "bench", test), feature(test))]
 
 #[macro_use]
 extern crate bitflags;
@@ -23,7 +23,7 @@ pub mod sink;
 mod tree;
 pub mod visitor;
 
-#[cfg(all(feature = "serde"))]
+#[cfg(feature = "serde")]
 mod serialization;
 
 pub use crate::nth_index_cache::NthIndexCache;
