@@ -16,15 +16,15 @@ pub struct AttrSelectorWithOptionalNamespace<'i, Impl: SelectorImpl<'i>> {
 }
 
 #[cfg(feature = "into_owned")]
-impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> static_self::IntoOwned<'any>
+impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> rspack_lightningcss_static_self::IntoOwned<'any>
   for AttrSelectorWithOptionalNamespace<'i, Impl>
 where
-  Impl: static_self::IntoOwned<'any, Owned = NewSel>,
+  Impl: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel>,
   NewSel: SelectorImpl<'any>,
-  Impl::LocalName: static_self::IntoOwned<'any, Owned = NewSel::LocalName>,
-  Impl::NamespacePrefix: static_self::IntoOwned<'any, Owned = NewSel::NamespacePrefix>,
-  Impl::NamespaceUrl: static_self::IntoOwned<'any, Owned = NewSel::NamespaceUrl>,
-  Impl::AttrValue: static_self::IntoOwned<'any, Owned = NewSel::AttrValue>,
+  Impl::LocalName: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::LocalName>,
+  Impl::NamespacePrefix: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::NamespacePrefix>,
+  Impl::NamespaceUrl: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::NamespaceUrl>,
+  Impl::AttrValue: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::AttrValue>,
 {
   type Owned = AttrSelectorWithOptionalNamespace<'any, NewSel>;
 
@@ -59,7 +59,7 @@ impl<'i, Impl: SelectorImpl<'i>> AttrSelectorWithOptionalNamespace<'i, Impl> {
   derive(schemars::JsonSchema),
   schemars(rename = "NamespaceConstraint")
 )]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum NamespaceConstraint<NamespaceUrl> {
   Any,
 
@@ -68,7 +68,7 @@ pub enum NamespaceConstraint<NamespaceUrl> {
 }
 
 #[derive(Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum ParsedAttrSelectorOperation<AttrValue> {
   Exists,
   WithValue {
@@ -110,7 +110,7 @@ impl<AttrValue> AttrSelectorOperation<AttrValue> {
   serde(rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum AttrSelectorOperator {
   Equal,
   Includes,
@@ -173,7 +173,7 @@ pub static SELECTOR_WHITESPACE: &[char] = &[' ', '\t', '\n', '\r', '\x0C'];
   serde(rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[derive(Default)]
 pub enum ParsedCaseSensitivity {
   // 's' was specified.

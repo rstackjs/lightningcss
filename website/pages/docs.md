@@ -35,7 +35,7 @@ The [TypeScript definitions](https://github.com/parcel-bundler/lightningcss/blob
 
 ## From Rust
 
-Lightning CSS can also be used as a Rust library to parse, transform, and minify CSS. See the Rust API docs on [docs.rs](https://docs.rs/rspack_lightningcss).
+Lightning CSS can also be used as a Rust library to parse, transform, and minify CSS. See the Rust API docs on [docs.rs](https://docs.rs/rspack-lightningcss).
 
 ## With Parcel
 

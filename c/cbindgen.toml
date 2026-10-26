@@ -2,7 +2,7 @@ language = "C"
 
 [parse]
 parse_deps = false
-include = ["lightningcss"]
+include = ["rspack-lightningcss"]
 
 [export.rename]
 StyleSheetWrapper = "StyleSheet"

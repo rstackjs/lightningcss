@@ -16,7 +16,7 @@ use cssparser::*;
 /// used in the `fill` and `stroke` properties.
 #[derive(Debug, Clone, PartialEq, Parse, ToCss)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -54,7 +54,7 @@ pub enum SVGPaint<'i> {
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum SVGPaintFallback {
   /// No fallback.
   None,
@@ -136,7 +136,7 @@ enum_property! {
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum StrokeDasharray {
   /// No dashing is used.
   None,
@@ -195,7 +195,7 @@ impl ToCss for StrokeDasharray {
 /// A value for the [marker](https://www.w3.org/TR/SVG2/painting.html#VertexMarkerProperties) properties.
 #[derive(Debug, Clone, PartialEq, Parse, ToCss)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -220,7 +220,7 @@ pub enum Marker<'i> {
   serde(rename_all = "lowercase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum ColorInterpolation {
   /// The UA can choose between sRGB or linearRGB.
   Auto,
@@ -239,7 +239,7 @@ pub enum ColorInterpolation {
   serde(rename_all = "lowercase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum ColorRendering {
   /// The UA can choose a tradeoff between speed and quality.
   Auto,
@@ -259,7 +259,7 @@ pub enum ColorRendering {
   serde(rename_all = "lowercase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum ShapeRendering {
   /// The UA can choose an appropriate tradeoff.
   Auto,
@@ -281,7 +281,7 @@ pub enum ShapeRendering {
   serde(rename_all = "lowercase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum TextRendering {
   /// The UA can choose an appropriate tradeoff.
   Auto,
@@ -302,7 +302,7 @@ pub enum TextRendering {
   serde(rename_all = "lowercase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum ImageRendering {
   /// The UA can choose a tradeoff between speed and quality.
   Auto,

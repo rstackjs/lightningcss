@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use cssparser::*;
-use lightningcss::{
+use rspack_lightningcss::{
   declaration::DeclarationBlock,
   error::ParserError,
   rules::{CssRuleList, Location},
@@ -163,8 +163,8 @@ impl<'i> AtRuleParser<'i> for CustomAtRuleParser {
 impl<'i> ToCss for AtRule<'i> {
   fn to_css<W>(
     &self,
-    dest: &mut lightningcss::printer::Printer<W>,
-  ) -> Result<(), lightningcss::error::PrinterError>
+    dest: &mut rspack_lightningcss::printer::Printer<W>,
+  ) -> Result<(), rspack_lightningcss::error::PrinterError>
   where
     W: std::fmt::Write,
   {
@@ -198,7 +198,7 @@ impl<'i> ToCss for AtRule<'i> {
 }
 
 #[cfg(feature = "visitor")]
-use lightningcss::visitor::{Visit, VisitTypes, Visitor};
+use rspack_lightningcss::visitor::{Visit, VisitTypes, Visitor};
 
 #[cfg(feature = "visitor")]
 impl<'i, V: Visitor<'i, AtRule<'i>>> Visit<'i, AtRule<'i>, V> for AtRule<'i> {

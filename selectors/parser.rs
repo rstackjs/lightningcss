@@ -382,11 +382,12 @@ pub struct SelectorList<'i, Impl: SelectorImpl<'i>>(
 );
 
 #[cfg(feature = "into_owned")]
-impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> static_self::IntoOwned<'any> for SelectorList<'i, Impl>
+impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> rspack_lightningcss_static_self::IntoOwned<'any>
+  for SelectorList<'i, Impl>
 where
-  Impl: static_self::IntoOwned<'any, Owned = NewSel>,
+  Impl: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel>,
   NewSel: SelectorImpl<'any>,
-  Component<'i, Impl>: static_self::IntoOwned<'any, Owned = Component<'any, NewSel>>,
+  Component<'i, Impl>: rspack_lightningcss_static_self::IntoOwned<'any, Owned = Component<'any, NewSel>>,
 {
   type Owned = SelectorList<'any, NewSel>;
 
@@ -714,11 +715,12 @@ pub fn namespace_empty_string<'i, Impl: SelectorImpl<'i>>() -> Impl::NamespaceUr
 pub struct Selector<'i, Impl: SelectorImpl<'i>>(SpecificityAndFlags, Vec<Component<'i, Impl>>);
 
 #[cfg(feature = "into_owned")]
-impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> static_self::IntoOwned<'any> for Selector<'i, Impl>
+impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> rspack_lightningcss_static_self::IntoOwned<'any>
+  for Selector<'i, Impl>
 where
-  Impl: static_self::IntoOwned<'any, Owned = NewSel>,
+  Impl: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel>,
   NewSel: SelectorImpl<'any>,
-  Component<'i, Impl>: static_self::IntoOwned<'any, Owned = Component<'any, NewSel>>,
+  Component<'i, Impl>: rspack_lightningcss_static_self::IntoOwned<'any, Owned = Component<'any, NewSel>>,
 {
   type Owned = Selector<'any, NewSel>;
 
@@ -1148,7 +1150,7 @@ impl<'a, 'i, Impl: SelectorImpl<'i>> Iterator for AncestorIter<'a, 'i, Impl> {
   serde(rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum Combinator {
   Child,        //  >
   Descendant,   // space
@@ -1211,7 +1213,7 @@ impl Combinator {
 
 /// An enum for the different types of :nth- pseudoclasses
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum NthType {
   Child,
   LastChild,
@@ -1245,7 +1247,7 @@ impl NthType {
 /// nth-child(An+B)).
 /// https://www.w3.org/TR/selectors-3/#nth-child-pseudo
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct NthSelectorData {
   pub ty: NthType,
   pub is_function: bool,
@@ -1347,11 +1349,12 @@ impl NthSelectorData {
 pub struct NthOfSelectorData<'i, Impl: SelectorImpl<'i>>(NthSelectorData, Box<[Selector<'i, Impl>]>);
 
 #[cfg(feature = "into_owned")]
-impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> static_self::IntoOwned<'any> for NthOfSelectorData<'i, Impl>
+impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> rspack_lightningcss_static_self::IntoOwned<'any>
+  for NthOfSelectorData<'i, Impl>
 where
-  Impl: static_self::IntoOwned<'any, Owned = NewSel>,
+  Impl: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel>,
   NewSel: SelectorImpl<'any>,
-  Component<'i, Impl>: static_self::IntoOwned<'any, Owned = Component<'any, NewSel>>,
+  Component<'i, Impl>: rspack_lightningcss_static_self::IntoOwned<'any, Owned = Component<'any, NewSel>>,
 {
   type Owned = NthOfSelectorData<'any, NewSel>;
 
@@ -1480,18 +1483,19 @@ pub enum Component<'i, Impl: SelectorImpl<'i>> {
 }
 
 #[cfg(feature = "into_owned")]
-impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> static_self::IntoOwned<'any> for Component<'i, Impl>
+impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> rspack_lightningcss_static_self::IntoOwned<'any>
+  for Component<'i, Impl>
 where
-  Impl: static_self::IntoOwned<'any, Owned = NewSel>,
+  Impl: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel>,
   NewSel: SelectorImpl<'any>,
-  Impl::NamespaceUrl: static_self::IntoOwned<'any, Owned = NewSel::NamespaceUrl>,
-  Impl::NamespacePrefix: static_self::IntoOwned<'any, Owned = NewSel::NamespacePrefix>,
-  Impl::Identifier: static_self::IntoOwned<'any, Owned = NewSel::Identifier>,
-  Impl::LocalName: static_self::IntoOwned<'any, Owned = NewSel::LocalName>,
-  Impl::AttrValue: static_self::IntoOwned<'any, Owned = NewSel::AttrValue>,
-  Impl::NonTSPseudoClass: static_self::IntoOwned<'any, Owned = NewSel::NonTSPseudoClass>,
-  Impl::PseudoElement: static_self::IntoOwned<'any, Owned = NewSel::PseudoElement>,
-  Impl::VendorPrefix: static_self::IntoOwned<'any, Owned = NewSel::VendorPrefix>,
+  Impl::NamespaceUrl: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::NamespaceUrl>,
+  Impl::NamespacePrefix: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::NamespacePrefix>,
+  Impl::Identifier: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::Identifier>,
+  Impl::LocalName: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::LocalName>,
+  Impl::AttrValue: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::AttrValue>,
+  Impl::NonTSPseudoClass: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::NonTSPseudoClass>,
+  Impl::PseudoElement: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::PseudoElement>,
+  Impl::VendorPrefix: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::VendorPrefix>,
 {
   type Owned = Component<'any, NewSel>;
 
@@ -1696,11 +1700,12 @@ pub struct LocalName<'i, Impl: SelectorImpl<'i>> {
 }
 
 #[cfg(feature = "into_owned")]
-impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> static_self::IntoOwned<'any> for LocalName<'i, Impl>
+impl<'any, 'i, Impl: SelectorImpl<'i>, NewSel> rspack_lightningcss_static_self::IntoOwned<'any>
+  for LocalName<'i, Impl>
 where
-  Impl: static_self::IntoOwned<'any, Owned = NewSel>,
+  Impl: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel>,
   NewSel: SelectorImpl<'any>,
-  Impl::LocalName: static_self::IntoOwned<'any, Owned = NewSel::LocalName>,
+  Impl::LocalName: rspack_lightningcss_static_self::IntoOwned<'any, Owned = NewSel::LocalName>,
 {
   type Owned = LocalName<'any, NewSel>;
 

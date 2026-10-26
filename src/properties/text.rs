@@ -104,7 +104,7 @@ impl ToCss for TextTransformOther {
   serde(rename_all = "camelCase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 struct SerializedTextTransformOther {
   /// Puts all typographic character units in full-width form.
   full_width: bool,
@@ -155,7 +155,7 @@ impl<'a> schemars::JsonSchema for TextTransformOther {
 #[cfg_attr(feature = "visitor", derive(Visit))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct TextTransform {
   /// How case should be transformed.
   pub case: TextTransformCase,
@@ -357,7 +357,7 @@ enum_property! {
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum Spacing {
   /// No additional spacing is applied.
   Normal,
@@ -374,7 +374,7 @@ pub enum Spacing {
   serde(rename_all = "camelCase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct TextIndent {
   /// The amount to indent.
   pub value: LengthPercentage,
@@ -452,7 +452,7 @@ impl ToCss for TextIndent {
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum TextSizeAdjust {
   /// Use the default size adjustment when displaying on a small device.
   Auto,
@@ -468,7 +468,7 @@ bitflags! {
   /// Multiple lines may be specified by combining the flags.
   #[cfg_attr(feature = "visitor", derive(Visit))]
   #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize), serde(from = "SerializedTextDecorationLine", into = "SerializedTextDecorationLine"))]
-  #[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+  #[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
   #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
   pub struct TextDecorationLine: u8 {
     /// Each line of text is underlined.
@@ -707,7 +707,7 @@ impl Default for TextDecorationStyle {
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum TextDecorationThickness {
   /// The UA chooses an appropriate thickness for text decoration lines.
   Auto,
@@ -864,7 +864,7 @@ enum_property! {
 /// A value for the [text-emphasis-style](https://www.w3.org/TR/2020/WD-css-text-decor-4-20200506/#text-emphasis-style-property) property.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -1044,7 +1044,7 @@ enum_property! {
 #[cfg_attr(feature = "visitor", derive(Visit))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct TextEmphasisPosition {
   /// The vertical position.
   pub vertical: TextEmphasisPositionVertical,
@@ -1378,7 +1378,7 @@ impl<'i> PropertyHandler<'i> for TextDecorationHandler<'i> {
   serde(rename_all = "camelCase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct TextShadow {
   /// The color of the text shadow.
   pub color: CssColor,

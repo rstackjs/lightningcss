@@ -51,7 +51,7 @@ use smallvec::SmallVec;
 /// with storing a boolean along with each property.
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "visitor", derive(Visit), visit(visit_declaration_block, PROPERTIES))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -161,7 +161,12 @@ impl<'i> DeclarationBlock<'i> {
     dest.indent();
     dest.newline()?;
 
-    self.to_css_declarations(dest, false, &parcel_selectors::SelectorList(SmallVec::new()), 0)?;
+    self.to_css_declarations(
+      dest,
+      false,
+      &rspack_lightningcss_selectors::SelectorList(SmallVec::new()),
+      0,
+    )?;
 
     dest.dedent();
     dest.newline()?;

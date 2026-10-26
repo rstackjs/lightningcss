@@ -26,7 +26,7 @@ use std::path::Path;
 
 /// Configuration for CSS modules.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct Config {
   /// The name pattern to use when renaming class names and other identifiers.
   /// Default is `[hash]_[local]`.
@@ -470,7 +470,7 @@ impl<'a, 'c> CssModule<'a, 'c> {
     for sel in &selectors.0 {
       if sel.len() == 1 {
         match sel.iter_raw_match_order().next().unwrap() {
-          parcel_selectors::parser::Component::Class(ref id) => {
+          rspack_lightningcss_selectors::parser::Component::Class(ref id) => {
             for name in &composes.names {
               let reference = match &composes.from {
                 None => CssModuleReference::Local {

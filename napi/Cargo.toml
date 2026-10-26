@@ -1,15 +1,15 @@
 [package]
 authors = ["Devon Govett <devongovett@gmail.com>"]
-name = "lightningcss-napi"
-version = "0.4.9"
+name = "rspack-lightningcss-napi"
+version.workspace = true
 description = "Node-API bindings for Lightning CSS"
 license = "MPL-2.0"
-repository = "https://github.com/parcel-bundler/lightningcss"
+repository.workspace = true
 edition = "2021"
 
 [features]
 default = []
-visitor = ["lightningcss/visitor"]
+visitor = ["rspack-lightningcss/visitor"]
 bundler = ["dep:crossbeam-channel", "dep:rayon"]
 
 [dependencies]
@@ -17,7 +17,7 @@ serde = { version = "1.0.201", features = ["derive"] }
 serde-content = { version = "0.1.2", features = ["serde"] }
 serde_bytes = "0.11.5"
 cssparser = "0.37.0"
-lightningcss = { package = "rspack_lightningcss", version = "0.1.0", path = "../", features = [
+rspack-lightningcss = { workspace = true, features = [
   "nodejs",
   "serde",
 ] }

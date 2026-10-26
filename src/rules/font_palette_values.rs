@@ -19,7 +19,7 @@ use cssparser::*;
 /// A [@font-palette-values](https://drafts.csswg.org/css-fonts-4/#font-palette-values) rule.
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct FontPaletteValuesRule<'i> {
@@ -38,7 +38,7 @@ pub struct FontPaletteValuesRule<'i> {
 ///  See [FontPaletteValuesRule](FontPaletteValuesRule).
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -67,7 +67,7 @@ pub enum FontPaletteValuesProperty<'i> {
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum BasePalette {
   /// A light color palette as defined within the font.
   Light,
@@ -83,7 +83,7 @@ pub enum BasePalette {
 #[cfg_attr(feature = "visitor", derive(Visit))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct OverrideColors {
   /// The index of the color within the palette to override.
   index: u16,

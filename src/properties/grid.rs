@@ -26,7 +26,7 @@ use crate::serialization::ValueWrapper;
 /// for the `grid-template-rows` and `grid-template-columns` properties.
 #[derive(Debug, Clone, PartialEq, Parse, ToCss)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -47,7 +47,7 @@ pub enum TrackSizing<'i> {
 /// See [TrackSizing](TrackSizing).
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -67,7 +67,7 @@ pub struct TrackList<'i> {
 /// See [TrackList](TrackList).
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -94,7 +94,7 @@ pub enum TrackListItem<'i> {
   serde(tag = "type", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum TrackSize {
   /// An explicit track breadth.
   #[cfg_attr(feature = "serde", serde(with = "ValueWrapper::<TrackBreadth>"))]
@@ -123,7 +123,7 @@ impl Default for TrackSize {
 #[cfg_attr(feature = "visitor", derive(Visit))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize), serde(transparent))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct TrackSizeList(pub SmallVec<[TrackSize; 1]>);
 
 /// A [`<track-breadth>`](https://drafts.csswg.org/css-grid-2/#typedef-track-breadth) value.
@@ -137,7 +137,7 @@ pub struct TrackSizeList(pub SmallVec<[TrackSize; 1]>);
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum TrackBreadth {
   /// An explicit length.
   Length(NonNegative<LengthPercentage>),
@@ -157,7 +157,7 @@ pub enum TrackBreadth {
 /// See [TrackListItem](TrackListItem).
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -186,7 +186,7 @@ pub struct TrackRepeat<'i> {
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum RepeatCount {
   /// The number of times to repeat.
   Number(CSSInteger),
@@ -544,7 +544,7 @@ impl ToCss for TrackSizeList {
   serde(tag = "type", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum GridTemplateAreas {
   /// No named grid areas.
   None,
@@ -712,7 +712,7 @@ impl GridTemplateAreas {
 /// If `areas` is not `None`, then `rows` must also not be `None`.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub struct GridTemplate<'i> {
@@ -946,7 +946,7 @@ bitflags! {
   /// not be combined.
   #[cfg_attr(feature = "visitor", derive(Visit))]
   #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize), serde(from = "SerializedGridAutoFlow", into = "SerializedGridAutoFlow"))]
-  #[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+  #[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
   #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone, Copy)]
   pub struct GridAutoFlow: u8 {
     /// The auto-placement algorithm places items by filling each row, adding new rows as necessary.
@@ -1113,7 +1113,7 @@ impl ToCss for GridAutoFlow {
 /// Explicit and implicit values may not be combined.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -1350,7 +1350,7 @@ impl_shorthand! {
 /// used in the `grid-row-start`, `grid-row-end`, `grid-column-start`, and `grid-column-end` properties.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),

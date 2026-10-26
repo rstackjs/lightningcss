@@ -16,8 +16,8 @@ use crate::vendor_prefix::VendorPrefix;
 use crate::visitor::{Visit, VisitTypes, Visitor};
 use crate::{macros::enum_property, values::string::CowArcStr};
 use cssparser::*;
-use parcel_selectors::parser::{NthType, SelectorParseErrorKind};
-use parcel_selectors::{
+use rspack_lightningcss_selectors::parser::{NthType, SelectorParseErrorKind};
+use rspack_lightningcss_selectors::{
   attr::{AttrSelectorOperator, ParsedAttrSelectorOperation, ParsedCaseSensitivity},
   parser::SelectorImpl,
 };
@@ -34,7 +34,7 @@ mod private {
   pub struct Selectors;
 
   #[cfg(feature = "into_owned")]
-  impl<'any> ::static_self::IntoOwned<'any> for Selectors {
+  impl<'any> ::rspack_lightningcss_static_self::IntoOwned<'any> for Selectors {
     type Owned = Self;
 
     fn into_owned(self) -> Self::Owned {
@@ -47,7 +47,7 @@ mod private {
 fn _assert_into_owned() {
   // Ensure that we provide into_owned
 
-  use static_self::IntoOwned;
+  use rspack_lightningcss_static_self::IntoOwned;
   fn _assert<'any, T: IntoOwned<'any>>() {}
 
   _assert::<SelectorList>();
@@ -56,16 +56,16 @@ fn _assert_into_owned() {
 use private::Selectors;
 
 /// A list of selectors.
-pub type SelectorList<'i> = parcel_selectors::SelectorList<'i, Selectors>;
+pub type SelectorList<'i> = rspack_lightningcss_selectors::SelectorList<'i, Selectors>;
 /// A CSS selector, including a list of components.
-pub type Selector<'i> = parcel_selectors::parser::Selector<'i, Selectors>;
+pub type Selector<'i> = rspack_lightningcss_selectors::parser::Selector<'i, Selectors>;
 /// An individual component within a selector.
-pub type Component<'i> = parcel_selectors::parser::Component<'i, Selectors>;
+pub type Component<'i> = rspack_lightningcss_selectors::parser::Component<'i, Selectors>;
 
 /// Whether a selector contains nesting, including inside a functional pseudo class.
 pub(crate) fn has_nesting(selector: &Selector) -> bool {
   struct WithoutNesting;
-  impl<'i> parcel_selectors::visitor::SelectorVisitor<'i> for WithoutNesting {
+  impl<'i> rspack_lightningcss_selectors::visitor::SelectorVisitor<'i> for WithoutNesting {
     type Impl = Selectors;
 
     fn visit_simple_selector(&mut self, component: &Component<'i>) -> bool {
@@ -85,7 +85,7 @@ pub(crate) fn has_nesting(selector: &Selector) -> bool {
 }
 
 /// A combinator.
-pub use parcel_selectors::parser::Combinator;
+pub use rspack_lightningcss_selectors::parser::Combinator;
 
 impl<'i> SelectorImpl<'i> for Selectors {
   type AttrValue = CSSString<'i>;
@@ -113,7 +113,7 @@ pub(crate) struct SelectorParser<'a, 'i> {
   pub options: &'a ParserOptions<'i>,
 }
 
-impl<'a, 'i> parcel_selectors::parser::Parser<'i> for SelectorParser<'a, 'i> {
+impl<'a, 'i> rspack_lightningcss_selectors::parser::Parser<'i> for SelectorParser<'a, 'i> {
   type Impl = Selectors;
   type Error = ParserError<'i>;
 
@@ -431,7 +431,7 @@ enum_property! {
   serde(tag = "kind", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum PseudoClass<'i> {
   // https://drafts.csswg.org/selectors-4/#linguistic-pseudos
   /// The [:lang()](https://drafts.csswg.org/selectors-4/#the-lang-pseudo) pseudo class.
@@ -624,7 +624,7 @@ pub enum PseudoClass<'i> {
   serde(rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum WebKitScrollbarPseudoClass {
   /// :horizontal
   Horizontal,
@@ -650,7 +650,7 @@ pub enum WebKitScrollbarPseudoClass {
   WindowInactive,
 }
 
-impl<'i> parcel_selectors::parser::NonTSPseudoClass<'i> for PseudoClass<'i> {
+impl<'i> rspack_lightningcss_selectors::parser::NonTSPseudoClass<'i> for PseudoClass<'i> {
   type Impl = Selectors;
 
   fn is_active_or_hover(&self) -> bool {
@@ -946,7 +946,7 @@ impl<'i> PseudoClass<'i> {
   serde(tag = "kind", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum PseudoElement<'i> {
   /// The [::after](https://drafts.csswg.org/css-pseudo-4/#selectordef-after) pseudo element.
   After,
@@ -1063,7 +1063,7 @@ pub enum PseudoElement<'i> {
   serde(rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum WebKitScrollbarPseudoElement {
   /// ::-webkit-scrollbar
   Scrollbar,
@@ -1084,7 +1084,7 @@ pub enum WebKitScrollbarPseudoElement {
 /// A [view transition part name](https://w3c.github.io/csswg-drafts/css-view-transitions-1/#typedef-pt-name-selector).
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum ViewTransitionPartName<'i> {
   /// *
   #[cfg_attr(feature = "serde", serde(rename = "*"))]
@@ -1136,7 +1136,7 @@ impl<'i> ToCss for ViewTransitionPartName<'i> {
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct ViewTransitionPartSelector<'i> {
   /// The view transition part name.
   #[cfg_attr(feature = "serde", serde(borrow))]
@@ -1333,7 +1333,7 @@ where
   }
 }
 
-impl<'i> parcel_selectors::parser::PseudoElement<'i> for PseudoElement<'i> {
+impl<'i> rspack_lightningcss_selectors::parser::PseudoElement<'i> for PseudoElement<'i> {
   type Impl = Selectors;
 
   fn accepts_state_pseudo_classes(&self) -> bool {
@@ -1462,7 +1462,7 @@ fn serialize_selector<'a, 'i, W>(
 where
   W: fmt::Write,
 {
-  use parcel_selectors::parser::*;
+  use rspack_lightningcss_selectors::parser::*;
   // Compound selectors invert the order of their contents, so we need to
   // undo that during serialization.
   //
@@ -1659,10 +1659,10 @@ where
       }
 
       match case_sensitivity {
-        parcel_selectors::attr::ParsedCaseSensitivity::CaseSensitive
-        | parcel_selectors::attr::ParsedCaseSensitivity::AsciiCaseInsensitiveIfInHtmlElementInHtmlDocument => {}
-        parcel_selectors::attr::ParsedCaseSensitivity::AsciiCaseInsensitive => dest.write_str(" i")?,
-        parcel_selectors::attr::ParsedCaseSensitivity::ExplicitCaseSensitive => dest.write_str(" s")?,
+        rspack_lightningcss_selectors::attr::ParsedCaseSensitivity::CaseSensitive
+        | rspack_lightningcss_selectors::attr::ParsedCaseSensitivity::AsciiCaseInsensitiveIfInHtmlElementInHtmlDocument => {}
+        rspack_lightningcss_selectors::attr::ParsedCaseSensitivity::AsciiCaseInsensitive => dest.write_str(" i")?,
+        rspack_lightningcss_selectors::attr::ParsedCaseSensitivity::ExplicitCaseSensitive => dest.write_str(" s")?,
       }
       dest.write_char(']')
     }
@@ -2301,7 +2301,7 @@ pub(crate) fn is_unused(
 
 /// Returns whether the selector has any class or id components.
 pub(crate) fn is_pure_css_modules_selector(selector: &Selector) -> bool {
-  use parcel_selectors::parser::Component;
+  use rspack_lightningcss_selectors::parser::Component;
   selector.iter_raw_match_order().any(|c| match c {
     Component::Class(_) | Component::ID(_) => true,
     Component::Is(s) | Component::Where(s) | Component::Has(s) | Component::Any(_, s) | Component::Negation(s) => {
@@ -2376,8 +2376,8 @@ impl<'i> ParseWithOptions<'i> for SelectorList<'i> {
         options: &options,
       },
       input,
-      parcel_selectors::parser::ParseErrorRecovery::DiscardList,
-      parcel_selectors::parser::NestingRequirement::None,
+      rspack_lightningcss_selectors::parser::ParseErrorRecovery::DiscardList,
+      rspack_lightningcss_selectors::parser::NestingRequirement::None,
     )
   }
 }

@@ -1,8 +1,9 @@
 > [!NOTE]
 > **Rspack fork:** This repository maintains Lightning CSS for Rspack integration and independent releases. The upstream project is [parcel-bundler/lightningcss](https://github.com/parcel-bundler/lightningcss).
 >
-> - **Rust:** Use `rspack_lightningcss`. Its version starts at `0.1.0` and is independent of upstream Lightning CSS versions.
+> - **Rust:** Use `rspack-lightningcss` (imported as `rspack_lightningcss`). Its version starts at `0.1.0` and is independent of upstream Lightning CSS versions.
 > - **npm:** The package names are `rspack_lightningcss`, `rspack_lightningcss-cli`, and `rspack_lightningcss-wasm`. The CLI command remains `lightningcss`.
+> - **Rust workspace:** All crates use the `rspack-` prefix and share version `0.1.0`. Internal dependency names and versions are declared in `[workspace.dependencies]`; dependency keys and Rust imports use the same package names without dependency aliases. `release-crates` validates and publishes all publishable members together, so the fork's derive and selector crates are used when verifying the published package.
 > - **Publishing:** Manually run `release-crates` for Rust, or `release` for npm/CLI/WASM and Rust. Both support `dry_run` to validate without publishing; pushes and tags do not automatically publish packages.
 >
 > The original upstream README is preserved below. Its package names and links refer to upstream Lightning CSS; use the fork's package names when integrating this repository.

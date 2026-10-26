@@ -159,10 +159,10 @@ use margin_padding::*;
 use masking::*;
 use outline::*;
 use overflow::*;
+#[cfg(feature = "into_owned")]
+use rspack_lightningcss_static_self::IntoOwned;
 use size::*;
 use smallvec::{smallvec, SmallVec};
-#[cfg(feature = "into_owned")]
-use static_self::IntoOwned;
 use svg::*;
 use text::*;
 use transform::*;
@@ -179,7 +179,7 @@ macro_rules! define_properties {
     /// A CSS property id.
     #[derive(Debug, Clone, PartialEq, Eq, Hash)]
     #[cfg_attr(feature = "visitor", derive(Visit))]
-    #[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+    #[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
     pub enum PropertyId<'i> {
       $(
         #[doc=concat!("The `", $name, "` property.")]
@@ -680,7 +680,7 @@ macro_rules! define_properties {
     /// A CSS property.
     #[derive(Debug, Clone, PartialEq)]
     #[cfg_attr(feature = "visitor", derive(Visit), visit(visit_property, PROPERTIES))]
-    #[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+    #[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
     pub enum Property<'i> {
       $(
         #[doc=concat!("The `", $name, "` property.")]

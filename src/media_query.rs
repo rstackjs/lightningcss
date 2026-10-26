@@ -21,7 +21,7 @@ use crate::visitor::Visit;
 use bitflags::bitflags;
 use cssparser::*;
 #[cfg(feature = "into_owned")]
-use static_self::IntoOwned;
+use rspack_lightningcss_static_self::IntoOwned;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 
@@ -31,7 +31,7 @@ use crate::serialization::ValueWrapper;
 /// A [media query list](https://drafts.csswg.org/mediaqueries/#mq-list).
 #[derive(Clone, Debug, PartialEq, Default)]
 #[cfg_attr(feature = "visitor", derive(Visit), visit(visit_media_list, MEDIA_QUERIES))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -194,7 +194,7 @@ enum_property! {
 /// A [media type](https://drafts.csswg.org/mediaqueries/#media-types) within a media query.
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -261,7 +261,7 @@ impl<'a> schemars::JsonSchema for MediaType<'a> {
 /// A [media query](https://drafts.csswg.org/mediaqueries/#media).
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(feature = "visitor", visit(visit_media_query, MEDIA_QUERIES))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(rename_all = "camelCase"))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
@@ -515,7 +515,7 @@ enum_property! {
 /// Represents a media condition.
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -892,7 +892,7 @@ impl<'i> ToCss for MediaCondition<'i> {
   serde(rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum MediaFeatureComparison {
   /// `=`
   Equal,
@@ -961,7 +961,7 @@ impl MediaFeatureComparison {
   visit(<'i, ContainerSizeFeatureId>),
   visit(<'i, ScrollStateFeatureId>)
 )]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),
@@ -1223,7 +1223,7 @@ impl<'i, FeatureId: FeatureToCss> ToCss for QueryFeature<'i, FeatureId> {
 /// A media feature name.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize), serde(untagged))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 pub enum MediaFeatureName<'i, FeatureId> {
@@ -1577,7 +1577,7 @@ where
 /// See [MediaFeature](MediaFeature).
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "visitor", derive(Visit), visit(visit_media_feature_value, MEDIA_QUERIES))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(
   feature = "serde",
   derive(serde::Serialize, serde::Deserialize),

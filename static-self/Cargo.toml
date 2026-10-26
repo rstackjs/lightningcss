@@ -1,16 +1,16 @@
 [package]
-name = "static-self"
-version = "0.1.2"
+name = "rspack-lightningcss-static-self"
+version.workspace = true
 edition = "2021"
 authors = ["Devon Govett <devongovett@gmail.com>","Donny <kdy1997.dev@gmail.com>"]
 description = "A trait for values that can be cloned with a static lifetime"
 license = "MPL-2.0"
 keywords = [  ]
-repository = "https://github.com/parcel-bundler/lightningcss"
+repository.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 smallvec = { version = "1.11.1", optional = true }
-static-self-derive = { version = "0.1.1", path = "../static-self-derive" }
+rspack-lightningcss-static-self-derive.workspace = true
 indexmap = { version = "2.2.6", optional = true }

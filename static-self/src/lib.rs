@@ -1,4 +1,4 @@
-pub use static_self_derive::IntoOwned;
+pub use rspack_lightningcss_static_self_derive::IntoOwned;
 
 /// A trait for things that can be cloned with a new lifetime.
 ///

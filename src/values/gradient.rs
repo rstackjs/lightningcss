@@ -33,7 +33,7 @@ use crate::serialization::ValueWrapper;
   serde(tag = "type", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum Gradient {
   /// A `linear-gradient()`, and its vendor prefix.
   Linear(LinearGradient),
@@ -234,7 +234,7 @@ impl ToCss for Gradient {
   serde(rename_all = "camelCase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct LinearGradient {
   /// The vendor prefixes for the gradient.
   pub vendor_prefix: VendorPrefix,
@@ -353,7 +353,7 @@ impl IsCompatible for LinearGradient {
   serde(rename_all = "camelCase")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct RadialGradient {
   /// The vendor prefixes for the gradient.
   pub vendor_prefix: VendorPrefix,
@@ -794,7 +794,7 @@ enum_property! {
 #[cfg_attr(feature = "visitor", derive(Visit))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct ConicGradient {
   /// The angle of the gradient.
   pub angle: Angle,
@@ -1084,7 +1084,7 @@ where
   serde(tag = "kind", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum WebKitGradient {
   /// A linear `-webkit-gradient()`.
   Linear {
@@ -1290,7 +1290,7 @@ impl WebKitColorStop {
 #[cfg_attr(feature = "visitor", derive(Visit))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct WebKitGradientPoint {
   /// The x-position.
   pub x: WebKitGradientPointComponent<HorizontalPositionKeyword>,
@@ -1326,7 +1326,7 @@ impl ToCss for WebKitGradientPoint {
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum WebKitGradientPointComponent<S> {
   /// The `center` keyword.
   Center,
