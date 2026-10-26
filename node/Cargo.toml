@@ -6,7 +6,6 @@ edition = "2021"
 publish = false
 
 [lib]
-name = "lightningcss_node"
 # The addon links against Node.js at runtime and has no Rust unit tests.
 test = false
 crate-type = ["cdylib"]
