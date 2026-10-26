@@ -16,13 +16,13 @@ fn transform_style_attribute(ctx: CallContext) -> napi::Result<JsUnknown> {
 }
 
 #[js_function(1)]
-pub fn bundle(ctx: CallContext) -> napi::Result<JsUnknown> {
+fn bundle(ctx: CallContext) -> napi::Result<JsUnknown> {
   lightningcss_napi::bundle(ctx)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 #[js_function(1)]
-pub fn bundle_async(ctx: CallContext) -> napi::Result<JsObject> {
+fn bundle_async(ctx: CallContext) -> napi::Result<JsObject> {
   lightningcss_napi::bundle_async(ctx)
 }
 

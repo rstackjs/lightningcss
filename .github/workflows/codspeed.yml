@@ -13,7 +13,8 @@ permissions:
 jobs:
   codspeed:
     name: ${{ matrix.package }} / ${{ matrix.bench }}
-    runs-on: ubuntu-latest
+    # The pinned CodSpeed simulation runner does not support Ubuntu 26.04.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:

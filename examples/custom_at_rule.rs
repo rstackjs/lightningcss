@@ -110,7 +110,7 @@ impl<'i> AtRuleParser<'i> for TailwindAtRuleParser {
       "tailwind" => {
         let location = input.current_source_location();
         let ident = input.expect_ident()?;
-        let directive = match_ignore_ascii_case! { &*ident,
+        let directive = match_ignore_ascii_case! { ident,
           "base" => TailwindDirective::Base,
           "components" => TailwindDirective::Components,
           "utilities" => TailwindDirective::Utilities,
@@ -164,23 +164,17 @@ impl<'i, 'a> Visitor<'i, AtRule> for StyleRuleCollector<'i, 'a> {
   }
 
   fn visit_rule(&mut self, rule: &mut rspack_lightningcss::rules::CssRule<'i, AtRule>) -> Result<(), Self::Error> {
-    match rule {
-      CssRule::Style(rule) => {
-        for selector in rule.selectors.0.iter() {
-          if selector.len() != 1 {
-            continue; // TODO
-          }
-          for component in selector.iter_raw_match_order() {
-            match component {
-              Component::Class(name) => {
-                self.rules.insert(name.0.to_string(), rule.declarations.clone());
-              }
-              _ => {}
-            }
+    if let CssRule::Style(rule) = rule {
+      for selector in rule.selectors.0.iter() {
+        if selector.len() != 1 {
+          continue; // TODO
+        }
+        for component in selector.iter_raw_match_order() {
+          if let Component::Class(name) = component {
+            self.rules.insert(name.0.to_string(), rule.declarations.clone());
           }
         }
       }
-      _ => {}
     }
 
     rule.visit_children(self)
@@ -241,9 +235,8 @@ impl<'a, 'i> Visitor<'i, AtRule> for ApplyVisitor<'a, 'i> {
     &mut self,
     length: &mut rspack_lightningcss::values::length::LengthValue,
   ) -> Result<(), Self::Error> {
-    match length {
-      LengthValue::Px(px) => *length = LengthValue::Rem(*px / 16.0),
-      _ => {}
+    if let LengthValue::Px(px) = length {
+      *length = LengthValue::Rem(*px / 16.0)
     }
 
     Ok(())
@@ -259,11 +252,8 @@ impl<'a, 'i> Visitor<'i, AtRule> for ApplyVisitor<'a, 'i> {
 
   fn visit_selector(&mut self, selector: &mut Selector<'i>) -> Result<(), Self::Error> {
     for c in selector.iter_mut_raw_match_order() {
-      match c {
-        Component::Class(c) => {
-          *c = format!("tw-{}", c).into();
-        }
-        _ => {}
+      if let Component::Class(c) = c {
+        *c = format!("tw-{}", c).into();
       }
     }
 
@@ -272,14 +262,15 @@ impl<'a, 'i> Visitor<'i, AtRule> for ApplyVisitor<'a, 'i> {
 
   fn visit_token(&mut self, token: &mut TokenOrValue<'i>) -> Result<(), Self::Error> {
     match token {
-      TokenOrValue::Function(f) if f.name == "theme" => match f.arguments.0.first() {
-        Some(TokenOrValue::Token(Token::String(s))) => match s.as_ref() {
-          "blue-500" => *token = TokenOrValue::Color(CssColor::RGBA(RGBA::new(0, 0, 255, 1.0))),
-          "red-500" => *token = TokenOrValue::Color(CssColor::RGBA(RGBA::new(255, 0, 0, 1.0))),
-          _ => {}
-        },
-        _ => {}
-      },
+      TokenOrValue::Function(f) if f.name == "theme" => {
+        if let Some(TokenOrValue::Token(Token::String(s))) = f.arguments.0.first() {
+          match s.as_ref() {
+            "blue-500" => *token = TokenOrValue::Color(CssColor::RGBA(RGBA::new(0, 0, 255, 1.0))),
+            "red-500" => *token = TokenOrValue::Color(CssColor::RGBA(RGBA::new(255, 0, 0, 1.0))),
+            _ => {}
+          }
+        }
+      }
       _ => {}
     }
 

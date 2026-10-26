@@ -122,9 +122,9 @@ mod bundle {
   use super::*;
   use crossbeam_channel::{self, Receiver, Sender};
   use lightningcss::bundler::{FileProvider, ResolveResult};
-  use napi::{Env, JsBoolean, JsFunction, JsString, NapiRaw};
-  use std::path::{Path, PathBuf};
-  use std::str::FromStr;
+  use napi::{Env, JsFunction, JsString, NapiRaw};
+  use std::path::Path;
+
   use std::sync::Mutex;
   use threadsafe_function::{ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode};
 
@@ -649,14 +649,14 @@ struct OwnedPseudoClasses {
   pub focus_within: Option<String>,
 }
 
-impl<'a> Into<PseudoClasses<'a>> for &'a OwnedPseudoClasses {
-  fn into(self) -> PseudoClasses<'a> {
+impl<'a> From<&'a OwnedPseudoClasses> for PseudoClasses<'a> {
+  fn from(val: &'a OwnedPseudoClasses) -> Self {
     PseudoClasses {
-      hover: self.hover.as_deref(),
-      active: self.active.as_deref(),
-      focus: self.focus.as_deref(),
-      focus_visible: self.focus_visible.as_deref(),
-      focus_within: self.focus_within.as_deref(),
+      hover: val.hover.as_deref(),
+      active: val.active.as_deref(),
+      focus: val.focus.as_deref(),
+      focus_visible: val.focus_visible.as_deref(),
+      focus_within: val.focus_within.as_deref(),
     }
   }
 }
@@ -710,7 +710,7 @@ fn compile<'i>(
     );
 
     let mut stylesheet = StyleSheet::parse_with(
-      &code,
+      code,
       ParserOptions {
         filename: filename.clone(),
         flags,
@@ -1000,7 +1000,7 @@ fn compile_attr<'i>(
   let res = {
     let filename = config.filename.clone().unwrap_or_default();
     let mut attr = StyleAttribute::parse(
-      &code,
+      code,
       ParserOptions {
         filename,
         error_recovery: config.error_recovery,
@@ -1070,7 +1070,7 @@ impl<'i, E: std::error::Error> std::fmt::Display for CompileError<'i, E> {
       CompileError::PrinterError(err) => err.kind.fmt(f),
       CompileError::BundleError(err) => err.kind.fmt(f),
       CompileError::PatternError(err) => err.fmt(f),
-      CompileError::SourceMapError(err) => write!(f, "{}", err.to_string()), // TODO: switch to `fmt::Display` once parcel_sourcemap supports this
+      CompileError::SourceMapError(err) => write!(f, "{}", err), // TODO: switch to `fmt::Display` once parcel_sourcemap supports this
       #[cfg(feature = "visitor")]
       CompileError::JsError(err) => std::fmt::Debug::fmt(&err, f),
     }

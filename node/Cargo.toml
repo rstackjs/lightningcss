@@ -6,6 +6,8 @@ edition = "2021"
 publish = false
 
 [lib]
+# The addon links against Node.js at runtime and has no Rust unit tests.
+test = false
 crate-type = ["cdylib"]
 
 [dependencies]

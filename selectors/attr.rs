@@ -174,21 +174,17 @@ pub static SELECTOR_WHITESPACE: &[char] = &[' ', '\t', '\n', '\r', '\x0C'];
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[derive(Default)]
 pub enum ParsedCaseSensitivity {
   // 's' was specified.
   ExplicitCaseSensitive,
   // 'i' was specified.
   AsciiCaseInsensitive,
   // No flags were specified and HTML says this is a case-sensitive attribute.
+  #[default]
   CaseSensitive,
   // No flags were specified and HTML says this is a case-insensitive attribute.
   AsciiCaseInsensitiveIfInHtmlElementInHtmlDocument,
-}
-
-impl Default for ParsedCaseSensitivity {
-  fn default() -> Self {
-    ParsedCaseSensitivity::CaseSensitive
-  }
 }
 
 impl ParsedCaseSensitivity {

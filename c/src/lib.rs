@@ -30,12 +30,12 @@ impl<'i> CssError<'i> {
     }
 
     let string: String = match &self.kind {
-      ErrorKind::ParserError(err) => err.to_string().into(),
-      ErrorKind::MinifyError(err) => err.to_string().into(),
-      ErrorKind::PrinterError(err) => err.to_string().into(),
-      ErrorKind::PatternParseError(err) => err.to_string().into(),
-      ErrorKind::BrowserslistError(err) => err.to_string().into(),
-      ErrorKind::SourceMapError(err) => err.to_string().into(),
+      ErrorKind::ParserError(err) => err.to_string(),
+      ErrorKind::MinifyError(err) => err.to_string(),
+      ErrorKind::PrinterError(err) => err.to_string(),
+      ErrorKind::PatternParseError(err) => err.to_string(),
+      ErrorKind::BrowserslistError(err) => err.to_string(),
+      ErrorKind::SourceMapError(err) => err.to_string(),
     };
 
     self.message = Some(CString::new(string).unwrap());
@@ -98,8 +98,8 @@ pub struct Targets {
   samsung: u32,
 }
 
-impl Into<Browsers> for Targets {
-  fn into(self) -> Browsers {
+impl From<Targets> for Browsers {
+  fn from(val: Targets) -> Self {
     macro_rules! browser {
       ($val: expr) => {
         if $val > 0 {
@@ -111,15 +111,15 @@ impl Into<Browsers> for Targets {
     }
 
     Browsers {
-      android: browser!(self.android),
-      chrome: browser!(self.chrome),
-      edge: browser!(self.edge),
-      firefox: browser!(self.firefox),
-      ie: browser!(self.ie),
-      ios_saf: browser!(self.ios_saf),
-      opera: browser!(self.opera),
-      safari: browser!(self.safari),
-      samsung: browser!(self.samsung),
+      android: browser!(val.android),
+      chrome: browser!(val.chrome),
+      edge: browser!(val.edge),
+      firefox: browser!(val.firefox),
+      ie: browser!(val.ie),
+      ios_saf: browser!(val.ios_saf),
+      opera: browser!(val.opera),
+      safari: browser!(val.safari),
+      samsung: browser!(val.samsung),
     }
   }
 }
@@ -172,18 +172,18 @@ pub struct TransformOptions {
   unused_symbols_len: usize,
 }
 
-impl Into<MinifyOptions> for TransformOptions {
-  fn into(self) -> MinifyOptions {
+impl From<TransformOptions> for MinifyOptions {
+  fn from(val: TransformOptions) -> Self {
     let mut unused_symbols = HashSet::new();
-    let slice = unsafe { std::slice::from_raw_parts(self.unused_symbols, self.unused_symbols_len) };
+    let slice = unsafe { std::slice::from_raw_parts(val.unused_symbols, val.unused_symbols_len) };
     for symbol in slice {
       let string = unsafe { std::str::from_utf8_unchecked(CStr::from_ptr(*symbol).to_bytes()).to_owned() };
       unused_symbols.insert(string);
     }
 
     MinifyOptions {
-      targets: if self.targets != Targets::default() {
-        Some(self.targets.into()).into()
+      targets: if val.targets != Targets::default() {
+        Some(val.targets.into()).into()
       } else {
         Default::default()
       },
@@ -226,8 +226,8 @@ impl Default for PseudoClasses {
   }
 }
 
-impl<'a> Into<lightningcss::printer::PseudoClasses<'a>> for PseudoClasses {
-  fn into(self) -> lightningcss::printer::PseudoClasses<'a> {
+impl<'a> From<PseudoClasses> for lightningcss::printer::PseudoClasses<'a> {
+  fn from(val: PseudoClasses) -> Self {
     macro_rules! pc {
       ($ptr: expr) => {
         if $ptr.is_null() {
@@ -239,11 +239,11 @@ impl<'a> Into<lightningcss::printer::PseudoClasses<'a>> for PseudoClasses {
     }
 
     lightningcss::printer::PseudoClasses {
-      hover: pc!(self.hover),
-      active: pc!(self.active),
-      focus: pc!(self.focus),
-      focus_visible: pc!(self.focus_visible),
-      focus_within: pc!(self.focus_within),
+      hover: pc!(val.hover),
+      active: pc!(val.active),
+      focus: pc!(val.focus),
+      focus_visible: pc!(val.focus_visible),
+      focus_within: pc!(val.focus_within),
     }
   }
 }

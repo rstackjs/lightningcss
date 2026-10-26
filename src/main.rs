@@ -111,17 +111,14 @@ pub fn main() -> Result<(), std::io::Error> {
     // Don't silently wait for input if stdin was not redirected.
     let stdin = io::stdin();
     if stdin.is_terminal() {
-      return Err(io::Error::new(
-        io::ErrorKind::Other,
-        "Not reading from stdin as it was not redirected",
-      ));
+      return Err(io::Error::other("Not reading from stdin as it was not redirected"));
     }
     let filename = format!("stdin-{}", std::process::id());
     let contents = io::read_to_string(stdin)?;
     vec![(filename, contents)]
   };
 
-  let css_modules = if let Some(_) = cli_args.css_modules {
+  let css_modules = if cli_args.css_modules.is_some() {
     let pattern = if let Some(pattern) = cli_args.css_modules_pattern.as_ref() {
       match rspack_lightningcss::css_modules::Pattern::parse(pattern) {
         Ok(p) => p,
@@ -160,12 +157,11 @@ pub fn main() -> Result<(), std::io::Error> {
 
     let output_file = if let Some(output_file) = &cli_args.output_file {
       Some(Cow::Borrowed(Path::new(output_file)))
-    } else if let Some(dir) = &cli_args.output_dir {
-      Some(Cow::Owned(
-        Path::new(dir).join(Path::new(&filename).file_name().unwrap()),
-      ))
     } else {
-      None
+      cli_args
+        .output_dir
+        .as_ref()
+        .map(|dir| Cow::Owned(Path::new(dir).join(Path::new(&filename).file_name().unwrap())))
     };
 
     let res = {
@@ -229,7 +225,7 @@ pub fn main() -> Result<(), std::io::Error> {
       let mut vlq_output: Vec<u8> = Vec::new();
       source_map
         .write_vlq(&mut vlq_output)
-        .map_err(|_| io::Error::new(io::ErrorKind::Other, "Error writing sourcemap vlq"))?;
+        .map_err(|_| io::Error::other("Error writing sourcemap vlq"))?;
 
       let sm = SourceMapJson {
         version: 3,
@@ -297,8 +293,7 @@ pub fn main() -> Result<(), std::io::Error> {
 
 fn infer_css_modules_filename(path: &Path) -> Result<String, std::io::Error> {
   if path.extension() == Some(ffi::OsStr::new("json")) {
-    Err(io::Error::new(
-      io::ErrorKind::Other,
+    Err(io::Error::other(
       "Cannot infer a css modules json filename, since the output file extension is '.json'",
     ))
   } else {
