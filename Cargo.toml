@@ -18,7 +18,7 @@ repository = "https://github.com/rstackjs/lightningcss"
 lightningcss = { package = "rspack-lightningcss", version = "=0.1.0", path = "." }
 lightningcss-derive = { package = "rspack-lightningcss-derive", version = "=0.1.0", path = "derive" }
 lightningcss-napi = { package = "rspack-lightningcss-napi", version = "=0.1.0", path = "napi" }
-parcel_selectors = { package = "rspack-selectors", version = "=0.1.0", path = "selectors" }
+parcel_selectors = { package = "rspack-lightningcss-selectors", version = "=0.1.0", path = "selectors" }
 static-self = { package = "rspack-static-self", version = "=0.1.0", path = "static-self" }
 static-self-derive = { package = "rspack-static-self-derive", version = "=0.1.0", path = "static-self-derive" }
 

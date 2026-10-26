@@ -1,8 +1,8 @@
 [package]
-name = "rspack-selectors"
+name = "rspack-lightningcss-selectors"
 version.workspace = true
 authors = ["The Servo Project Developers"]
-documentation = "https://docs.rs/rspack-selectors/"
+documentation = "https://docs.rs/rspack-lightningcss-selectors/"
 description = "CSS Selectors matching for Rust - forked for lightningcss"
 repository.workspace = true
 readme = "README.md"

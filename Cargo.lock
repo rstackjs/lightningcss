@@ -1529,7 +1529,7 @@ dependencies = [
  "pretty_assertions",
  "rayon",
  "rspack-lightningcss-derive",
- "rspack-selectors",
+ "rspack-lightningcss-selectors",
  "rspack-static-self",
  "rustc-hash",
  "schemars",
@@ -1588,7 +1588,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rspack-selectors"
+name = "rspack-lightningcss-selectors"
 version = "0.1.0"
 dependencies = [
  "bitflags 2.6.0",
