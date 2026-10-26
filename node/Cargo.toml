@@ -12,7 +12,7 @@ test = false
 crate-type = ["cdylib"]
 
 [dependencies]
-lightningcss-napi = { workspace = true, features = [
+rspack-lightningcss-napi = { workspace = true, features = [
   "bundler",
   "visitor",
 ] }

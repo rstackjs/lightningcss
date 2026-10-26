@@ -8,7 +8,6 @@ edition = "2021"
 repository.workspace = true
 
 [lib]
-name = "lightningcss_derive"
 proc-macro = true
 
 [dependencies]

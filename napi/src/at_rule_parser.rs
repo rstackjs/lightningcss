@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use cssparser::*;
-use lightningcss::{
+use rspack_lightningcss::{
   declaration::DeclarationBlock,
   error::ParserError,
   printer::PrinterTrait,
@@ -162,7 +162,10 @@ impl<'i> AtRuleParser<'i> for CustomAtRuleParser {
 }
 
 impl<'i> ToCss for AtRule<'i> {
-  fn to_css<PrinterT: PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), lightningcss::error::PrinterError> {
+  fn to_css<PrinterT: PrinterTrait>(
+    &self,
+    dest: &mut PrinterT,
+  ) -> Result<(), rspack_lightningcss::error::PrinterError> {
     dest.write_char('@')?;
     serialize_identifier(&self.name, dest)?;
     if let Some(prelude) = &self.prelude {
@@ -193,7 +196,7 @@ impl<'i> ToCss for AtRule<'i> {
 }
 
 #[cfg(feature = "visitor")]
-use lightningcss::visitor::{Visit, VisitTypes, Visitor};
+use rspack_lightningcss::visitor::{Visit, VisitTypes, Visitor};
 
 #[cfg(feature = "visitor")]
 impl<'i, V: Visitor<'i, AtRule<'i>>> Visit<'i, AtRule<'i>, V> for AtRule<'i> {

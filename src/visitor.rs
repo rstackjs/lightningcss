@@ -87,7 +87,7 @@ use bitflags::bitflags;
 use indexmap::IndexMap;
 use smallvec::SmallVec;
 
-pub(crate) use lightningcss_derive::Visit;
+pub(crate) use rspack_lightningcss_derive::Visit;
 
 bitflags! {
   /// Describes what a [Visitor](Visitor) will visit when traversing a StyleSheet.

@@ -41,13 +41,13 @@ use crate::vendor_prefix::VendorPrefix;
 use crate::visitor::{Visit, VisitTypes, Visitor};
 use bitflags::bitflags;
 use cssparser::*;
-use parcel_selectors::parser::{NestingRequirement, ParseErrorRecovery};
+use rspack_lightningcss_selectors::parser::{NestingRequirement, ParseErrorRecovery};
 use std::sync::{Arc, RwLock};
 
 bitflags! {
   /// Parser feature flags to enable.
   #[derive(Clone, Debug, Default)]
-  #[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+  #[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
   pub struct ParserFlags: u8 {
     /// Whether the enable the [CSS nesting](https://www.w3.org/TR/css-nesting-1/) draft syntax.
     const NESTING = 1 << 0;
@@ -79,7 +79,7 @@ pub struct ParserOptions<'i> {
 }
 
 #[cfg(feature = "into_owned")]
-impl<'i, 'any> static_self::IntoOwned<'any> for ParserOptions<'i> {
+impl<'i, 'any> rspack_lightningcss_static_self::IntoOwned<'any> for ParserOptions<'i> {
   type Owned = ParserOptions<'any>;
 
   fn into_owned(self) -> Self::Owned {
@@ -132,7 +132,7 @@ impl crate::traits::ToCss for DefaultAtRule {
 }
 
 #[cfg(feature = "into_owned")]
-impl<'any> static_self::IntoOwned<'any> for DefaultAtRule {
+impl<'any> rspack_lightningcss_static_self::IntoOwned<'any> for DefaultAtRule {
   type Owned = Self;
   fn into_owned(self) -> Self {
     self

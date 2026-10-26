@@ -10,7 +10,7 @@ name = "lightningcss_c_bindings"
 crate-type = ["cdylib"]
 
 [dependencies]
-lightningcss = { workspace = true, features = ["browserslist"] }
+rspack-lightningcss = { workspace = true, features = ["browserslist"] }
 parcel_sourcemap = { version = "2.1.1", features = ["json"] }
 browserslist-rs = { version = "0.21.0" }
 

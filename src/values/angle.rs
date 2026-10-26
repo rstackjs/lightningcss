@@ -28,7 +28,7 @@ use std::f32::consts::PI;
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum Angle {
   /// An angle in degrees. There are 360 degrees in a full circle.
   Deg(CSSNumber),

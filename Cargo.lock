@@ -1530,7 +1530,7 @@ dependencies = [
  "rayon",
  "rspack-lightningcss-derive",
  "rspack-lightningcss-selectors",
- "rspack-static-self",
+ "rspack-lightningcss-static-self",
  "rustc-hash",
  "schemars",
  "serde",
@@ -1597,7 +1597,7 @@ dependencies = [
  "phf 0.11.2",
  "phf_codegen",
  "precomputed-hash",
- "rspack-static-self",
+ "rspack-lightningcss-static-self",
  "rustc-hash",
  "schemars",
  "serde",
@@ -1605,16 +1605,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "rspack-static-self"
+name = "rspack-lightningcss-static-self"
 version = "0.1.0"
 dependencies = [
  "indexmap 2.7.0",
- "rspack-static-self-derive",
+ "rspack-lightningcss-static-self-derive",
  "smallvec",
 ]
 
 [[package]]
-name = "rspack-static-self-derive"
+name = "rspack-lightningcss-static-self-derive"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",

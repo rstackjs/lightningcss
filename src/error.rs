@@ -4,11 +4,11 @@ use crate::properties::custom::Token;
 use crate::rules::Location;
 use crate::values::string::CowArcStr;
 use cssparser::{BasicParseErrorKind, ParseError, ParseErrorKind};
-use parcel_selectors::parser::SelectorParseErrorKind;
+use rspack_lightningcss_selectors::parser::SelectorParseErrorKind;
+#[cfg(feature = "into_owned")]
+use rspack_lightningcss_static_self::IntoOwned;
 #[cfg(any(feature = "serde", feature = "nodejs"))]
 use serde::Serialize;
-#[cfg(feature = "into_owned")]
-use static_self::IntoOwned;
 use std::fmt;
 
 /// An error with a source location.
@@ -16,7 +16,7 @@ use std::fmt;
 #[cfg_attr(any(feature = "serde", feature = "nodejs"), derive(serde::Serialize))]
 #[cfg_attr(any(feature = "serde"), derive(serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct Error<T> {
   /// The type of error that occurred.
   pub kind: T,
@@ -41,7 +41,7 @@ impl<T: fmt::Display + fmt::Debug> std::error::Error for Error<T> {}
 #[cfg_attr(any(feature = "serde", feature = "nodejs"), derive(serde::Serialize))]
 #[cfg_attr(any(feature = "serde"), derive(serde::Deserialize))]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub struct ErrorLocation {
   /// The filename in which the error occurred.
   pub filename: String,
@@ -70,7 +70,7 @@ impl fmt::Display for ErrorLocation {
 
 /// A parser error.
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(any(feature = "serde", feature = "nodejs"), derive(Serialize))]
 #[cfg_attr(any(feature = "serde", feature = "nodejs"), serde(tag = "type", content = "value"))]
 pub enum ParserError<'i> {
@@ -194,7 +194,7 @@ impl<'i> ParserError<'i> {
 
 /// A selector parsing error.
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 #[cfg_attr(any(feature = "serde", feature = "nodejs"), derive(Serialize))]
 #[cfg_attr(any(feature = "serde", feature = "nodejs"), serde(tag = "type", content = "value"))]
 pub enum SelectorError<'i> {

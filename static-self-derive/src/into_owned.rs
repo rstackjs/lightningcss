@@ -110,7 +110,7 @@ pub(crate) fn derive_into_owned(input: TokenStream) -> TokenStream {
 
   for type_param in type_param_names {
     generics.make_where_clause().predicates.push_value(parse_quote! {
-      #type_param: ::static_self::IntoOwned<'any>
+      #type_param: ::rspack_lightningcss_static_self::IntoOwned<'any>
     })
   }
 
@@ -137,7 +137,7 @@ pub(crate) fn derive_into_owned(input: TokenStream) -> TokenStream {
 
   let into_owned = if !has_generic {
     quote! {
-      impl #impl_generics ::static_self::IntoOwned<'any> for #self_name #ty_generics #where_clause {
+      impl #impl_generics ::rspack_lightningcss_static_self::IntoOwned<'any> for #self_name #ty_generics #where_clause {
         type Owned = Self;
 
         #[inline]
@@ -155,17 +155,17 @@ pub(crate) fn derive_into_owned(input: TokenStream) -> TokenStream {
       if let syn::GenericParam::Type(ty) = p {
         ty.default = None;
 
-        params.push(quote!(<#ty as static_self::IntoOwned<'any>>::Owned));
+        params.push(quote!(<#ty as rspack_lightningcss_static_self::IntoOwned<'any>>::Owned));
       }
     }
 
     if has_lifetime {
       quote! {
-        impl #impl_generics ::static_self::IntoOwned<'any> for #self_name #ty_generics #where_clause {
+        impl #impl_generics ::rspack_lightningcss_static_self::IntoOwned<'any> for #self_name #ty_generics #where_clause {
           type Owned = #self_name<'any, #(#params),*>;
           /// Consumes the value and returns an owned clone.
           fn into_owned(self) -> Self::Owned {
-            use ::static_self::IntoOwned;
+            use ::rspack_lightningcss_static_self::IntoOwned;
 
             #res
           }
@@ -173,11 +173,11 @@ pub(crate) fn derive_into_owned(input: TokenStream) -> TokenStream {
       }
     } else {
       quote! {
-        impl #impl_generics ::static_self::IntoOwned<'any> for #self_name #ty_generics #where_clause {
+        impl #impl_generics ::rspack_lightningcss_static_self::IntoOwned<'any> for #self_name #ty_generics #where_clause {
           type Owned = #self_name<#(#params),*>;
           /// Consumes the value and returns an owned clone.
           fn into_owned(self) -> Self::Owned {
-            use ::static_self::IntoOwned;
+            use ::rspack_lightningcss_static_self::IntoOwned;
 
             #res
           }

@@ -3,7 +3,8 @@ use std::{
   ops::{Index, IndexMut},
 };
 
-use lightningcss::{
+use napi::{Env, JsFunction, JsObject, JsUnknown, Ref, ValueType};
+use rspack_lightningcss::{
   media_query::MediaFeatureValue,
   properties::{
     custom::{Token, TokenList, TokenOrValue},
@@ -19,8 +20,7 @@ use lightningcss::{
   },
   visitor::{Visit, VisitTypes, Visitor},
 };
-use lightningcss::{stylesheet::StyleSheet, traits::IntoOwned};
-use napi::{Env, JsFunction, JsObject, JsUnknown, Ref, ValueType};
+use rspack_lightningcss::{stylesheet::StyleSheet, traits::IntoOwned};
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 
@@ -280,7 +280,7 @@ impl<'i> Visitor<'i, AtRule<'i>> for JsVisitor {
 
   fn visit_rule_list(
     &mut self,
-    rules: &mut lightningcss::rules::CssRuleList<'i, AtRule<'i>>,
+    rules: &mut rspack_lightningcss::rules::CssRuleList<'i, AtRule<'i>>,
   ) -> Result<(), Self::Error> {
     if self.types.contains(VisitTypes::RULES) {
       let env = self.env;
@@ -358,7 +358,7 @@ impl<'i> Visitor<'i, AtRule<'i>> for JsVisitor {
 
   fn visit_declaration_block(
     &mut self,
-    decls: &mut lightningcss::declaration::DeclarationBlock<'i>,
+    decls: &mut rspack_lightningcss::declaration::DeclarationBlock<'i>,
   ) -> Result<(), Self::Error> {
     if self.types.contains(VisitTypes::PROPERTIES) {
       let env = self.env;
@@ -388,40 +388,43 @@ impl<'i> Visitor<'i, AtRule<'i>> for JsVisitor {
     visit(&self.env, length, &self.visit_length)
   }
 
-  fn visit_angle(&mut self, angle: &mut lightningcss::values::angle::Angle) -> Result<(), Self::Error> {
+  fn visit_angle(&mut self, angle: &mut rspack_lightningcss::values::angle::Angle) -> Result<(), Self::Error> {
     visit(&self.env, angle, &self.visit_angle)
   }
 
-  fn visit_ratio(&mut self, ratio: &mut lightningcss::values::ratio::Ratio) -> Result<(), Self::Error> {
+  fn visit_ratio(&mut self, ratio: &mut rspack_lightningcss::values::ratio::Ratio) -> Result<(), Self::Error> {
     visit(&self.env, ratio, &self.visit_ratio)
   }
 
   fn visit_resolution(
     &mut self,
-    resolution: &mut lightningcss::values::resolution::Resolution,
+    resolution: &mut rspack_lightningcss::values::resolution::Resolution,
   ) -> Result<(), Self::Error> {
     visit(&self.env, resolution, &self.visit_resolution)
   }
 
-  fn visit_time(&mut self, time: &mut lightningcss::values::time::Time) -> Result<(), Self::Error> {
+  fn visit_time(&mut self, time: &mut rspack_lightningcss::values::time::Time) -> Result<(), Self::Error> {
     visit(&self.env, time, &self.visit_time)
   }
 
-  fn visit_color(&mut self, color: &mut lightningcss::values::color::CssColor) -> Result<(), Self::Error> {
+  fn visit_color(&mut self, color: &mut rspack_lightningcss::values::color::CssColor) -> Result<(), Self::Error> {
     visit(&self.env, color, &self.visit_color)
   }
 
-  fn visit_image(&mut self, image: &mut lightningcss::values::image::Image<'i>) -> Result<(), Self::Error> {
+  fn visit_image(&mut self, image: &mut rspack_lightningcss::values::image::Image<'i>) -> Result<(), Self::Error> {
     visit(&self.env, image, &self.visit_image.enter)?;
     image.visit_children(self)?;
     visit(&self.env, image, &self.visit_image.exit)
   }
 
-  fn visit_url(&mut self, url: &mut lightningcss::values::url::Url<'i>) -> Result<(), Self::Error> {
+  fn visit_url(&mut self, url: &mut rspack_lightningcss::values::url::Url<'i>) -> Result<(), Self::Error> {
     visit(&self.env, url, &self.visit_url)
   }
 
-  fn visit_media_list(&mut self, media: &mut lightningcss::media_query::MediaList<'i>) -> Result<(), Self::Error> {
+  fn visit_media_list(
+    &mut self,
+    media: &mut rspack_lightningcss::media_query::MediaList<'i>,
+  ) -> Result<(), Self::Error> {
     if self.types.contains(VisitTypes::MEDIA_QUERIES) {
       let env = self.env;
       let visit_media_query = self.visit_media_query.get::<JsFunction>(&env);
@@ -493,7 +496,7 @@ impl<'i> Visitor<'i, AtRule<'i>> for JsVisitor {
 
   fn visit_supports_condition(
     &mut self,
-    condition: &mut lightningcss::rules::supports::SupportsCondition<'i>,
+    condition: &mut rspack_lightningcss::rules::supports::SupportsCondition<'i>,
   ) -> Result<(), Self::Error> {
     visit(&self.env, condition, &self.visit_supports_condition.enter)?;
     condition.visit_children(self)?;
@@ -502,21 +505,21 @@ impl<'i> Visitor<'i, AtRule<'i>> for JsVisitor {
 
   fn visit_custom_ident(
     &mut self,
-    ident: &mut lightningcss::values::ident::CustomIdent,
+    ident: &mut rspack_lightningcss::values::ident::CustomIdent,
   ) -> Result<(), Self::Error> {
     visit(&self.env, ident, &self.visit_custom_ident)
   }
 
   fn visit_dashed_ident(
     &mut self,
-    ident: &mut lightningcss::values::ident::DashedIdent,
+    ident: &mut rspack_lightningcss::values::ident::DashedIdent,
   ) -> Result<(), Self::Error> {
     visit(&self.env, ident, &self.visit_dashed_ident)
   }
 
   fn visit_selector_list(
     &mut self,
-    selectors: &mut lightningcss::selector::SelectorList<'i>,
+    selectors: &mut rspack_lightningcss::selector::SelectorList<'i>,
   ) -> Result<(), Self::Error> {
     if let Some(visit) = self
       .visit_selector
@@ -535,7 +538,7 @@ impl<'i> Visitor<'i, AtRule<'i>> for JsVisitor {
 
   fn visit_token_list(
     &mut self,
-    tokens: &mut lightningcss::properties::custom::TokenList<'i>,
+    tokens: &mut rspack_lightningcss::properties::custom::TokenList<'i>,
   ) -> Result<(), Self::Error> {
     if self.types.contains(VisitTypes::TOKENS) {
       let env = self.env;

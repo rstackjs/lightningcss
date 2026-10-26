@@ -6,11 +6,11 @@ use std::mem::ManuallyDrop;
 use std::os::raw::c_char;
 use std::sync::{Arc, RwLock};
 
-use lightningcss::css_modules::PatternParseError;
-use lightningcss::error::{Error, MinifyErrorKind, ParserError, PrinterError};
-use lightningcss::stylesheet::{MinifyOptions, ParserFlags, ParserOptions, PrinterOptions, StyleSheet};
-use lightningcss::targets::Browsers;
 use parcel_sourcemap::SourceMap;
+use rspack_lightningcss::css_modules::PatternParseError;
+use rspack_lightningcss::error::{Error, MinifyErrorKind, ParserError, PrinterError};
+use rspack_lightningcss::stylesheet::{MinifyOptions, ParserFlags, ParserOptions, PrinterOptions, StyleSheet};
+use rspack_lightningcss::targets::Browsers;
 
 pub struct StyleSheetWrapper<'i> {
   stylesheet: StyleSheet<'i>,
@@ -226,7 +226,7 @@ impl Default for PseudoClasses {
   }
 }
 
-impl<'a> From<PseudoClasses> for lightningcss::printer::PseudoClasses<'a> {
+impl<'a> From<PseudoClasses> for rspack_lightningcss::printer::PseudoClasses<'a> {
   fn from(val: PseudoClasses) -> Self {
     macro_rules! pc {
       ($ptr: expr) => {
@@ -238,7 +238,7 @@ impl<'a> From<PseudoClasses> for lightningcss::printer::PseudoClasses<'a> {
       };
     }
 
-    lightningcss::printer::PseudoClasses {
+    rspack_lightningcss::printer::PseudoClasses {
       hover: pc!(val.hover),
       active: pc!(val.active),
       focus: pc!(val.focus),
@@ -276,14 +276,14 @@ pub extern "C" fn lightningcss_stylesheet_parse(
         let pattern =
           unsafe { std::str::from_utf8_unchecked(CStr::from_ptr(options.css_modules_pattern).to_bytes()) };
         unwrap!(
-          lightningcss::css_modules::Pattern::parse(pattern),
+          rspack_lightningcss::css_modules::Pattern::parse(pattern),
           error,
           std::ptr::null_mut()
         )
       } else {
-        lightningcss::css_modules::Pattern::default()
+        rspack_lightningcss::css_modules::Pattern::default()
       };
-      Some(lightningcss::css_modules::Config {
+      Some(rspack_lightningcss::css_modules::Config {
         pattern,
         dashed_idents: options.css_modules_dashed_idents,
         ..Default::default()
@@ -521,9 +521,9 @@ pub enum CssModuleReference {
   },
 }
 
-impl From<lightningcss::css_modules::CssModuleReference> for CssModuleReference {
-  fn from(reference: lightningcss::css_modules::CssModuleReference) -> Self {
-    use lightningcss::css_modules::CssModuleReference::*;
+impl From<rspack_lightningcss::css_modules::CssModuleReference> for CssModuleReference {
+  fn from(reference: rspack_lightningcss::css_modules::CssModuleReference) -> Self {
+    use rspack_lightningcss::css_modules::CssModuleReference::*;
     match reference {
       Local { name } => CssModuleReference::Local { name: name.into() },
       Global { name } => CssModuleReference::Global { name: name.into() },

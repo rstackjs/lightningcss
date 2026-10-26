@@ -1,6 +1,6 @@
 mod common;
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use codspeed_criterion_compat::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 
 fn bench_stylesheet_parse(c: &mut Criterion) {
   let fixtures = common::stylesheet_fixtures();

@@ -31,7 +31,7 @@ use cssparser::*;
   serde(tag = "type", content = "value", rename_all = "kebab-case")
 )]
 #[cfg_attr(feature = "jsonschema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "into_owned", derive(static_self::IntoOwned))]
+#[cfg_attr(feature = "into_owned", derive(rspack_lightningcss_static_self::IntoOwned))]
 pub enum BorderSideWidth {
   /// A UA defined `thin` value.
   Thin,
@@ -111,9 +111,9 @@ pub struct GenericBorder<S, const P: u8> {
 }
 
 #[cfg(feature = "into_owned")]
-impl<'any, S, const P: u8> static_self::IntoOwned<'any> for GenericBorder<S, P>
+impl<'any, S, const P: u8> rspack_lightningcss_static_self::IntoOwned<'any> for GenericBorder<S, P>
 where
-  S: static_self::IntoOwned<'any>,
+  S: rspack_lightningcss_static_self::IntoOwned<'any>,
 {
   type Owned = GenericBorder<S::Owned, P>;
   fn into_owned(self) -> Self::Owned {

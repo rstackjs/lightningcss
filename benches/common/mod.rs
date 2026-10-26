@@ -1,4 +1,4 @@
-use criterion::black_box;
+use codspeed_criterion_compat::black_box;
 use parcel_sourcemap::SourceMap;
 use rspack_lightningcss::stylesheet::{MinifyOptions, ParserOptions, PrinterOptions, StyleSheet};
 use std::fmt::Write;
