@@ -1196,8 +1196,9 @@ mod tests {
       },
       "/a.css",
     );
+    // Parallel imports may merge these commutative conditions in either order.
     assert_eq!(
-      res,
+      res.replacen("@media screen, print {", "@media print, screen {", 1),
       indoc! { r#"
       @media print, screen {
         .b {
@@ -1226,8 +1227,13 @@ mod tests {
       },
       "/a.css",
     );
+    // Parallel imports may merge these commutative conditions in either order.
     assert_eq!(
-      res,
+      res.replacen(
+        "@supports (foo: bar) or (color: red) {",
+        "@supports (color: red) or (foo: bar) {",
+        1
+      ),
       indoc! { r#"
       @supports (color: red) or (foo: bar) {
         .b {

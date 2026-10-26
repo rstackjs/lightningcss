@@ -68,7 +68,7 @@ fn derive(
     impl_generics.params.clear();
     generic
   } else {
-    &generics
+    generics
   };
 
   if impl_generics.lifetimes().next().is_none() {
@@ -249,7 +249,7 @@ fn derive(
   output.into()
 }
 
-fn skip_type(attrs: &Vec<Attribute>) -> bool {
+fn skip_type(attrs: &[Attribute]) -> bool {
   attrs.iter().any(|attr| attr.path.is_ident("skip_type"))
 }
 

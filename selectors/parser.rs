@@ -82,7 +82,7 @@ pub trait NonTSPseudoClass<'i>: Sized + ToCss {
 /// Returns a Cow::Borrowed if `s` is already ASCII lowercase, and a
 /// Cow::Owned if `s` had to be converted into ASCII lowercase.
 fn to_ascii_lowercase<'i>(s: CowRcStr<'i>) -> CowRcStr<'i> {
-  if let Some(first_uppercase) = s.bytes().position(|byte| byte >= b'A' && byte <= b'Z') {
+  if let Some(first_uppercase) = s.bytes().position(|byte: u8| byte.is_ascii_uppercase()) {
     let mut string = s.to_string();
     string[first_uppercase..].make_ascii_lowercase();
     string.into()
@@ -1113,7 +1113,7 @@ impl<'a, 'i, Impl: 'a + SelectorImpl<'i>> AncestorIter<'a, 'i, Impl> {
       if self
         .0
         .next_sequence()
-        .map_or(true, |x| matches!(x, Combinator::Child | Combinator::Descendant))
+        .is_none_or(|x| matches!(x, Combinator::Child | Combinator::Descendant))
       {
         break;
       }
@@ -1376,7 +1376,7 @@ impl<'i, Impl: SelectorImpl<'i>> NthOfSelectorData<'i, Impl> {
   /// Returns the selector list part of the selector
   #[inline]
   pub fn selectors(&self) -> &[Selector<'i, Impl>] {
-    &*self.1
+    &self.1
   }
 
   pub fn clone_selectors(&self) -> Box<[Selector<'i, Impl>]> {
@@ -1675,14 +1675,12 @@ impl<'i, Impl: SelectorImpl<'i>> Component<'i, Impl> {
       }
 
       Negation(ref list) | Is(ref list) | Where(ref list) => {
-        if !visitor.visit_selector_list(&list) {
+        if !visitor.visit_selector_list(list) {
           return false;
         }
       }
-      NthOf(ref nth_of_data) => {
-        if !visitor.visit_selector_list(nth_of_data.selectors()) {
-          return false;
-        }
+      NthOf(ref nth_of_data) if !visitor.visit_selector_list(nth_of_data.selectors()) => {
+        return false;
       }
       _ => {}
     }
@@ -2123,7 +2121,7 @@ where
 {
   if nesting_requirement == NestingRequirement::Prefixed {
     let state = input.state();
-    if !input.expect_delim('&').is_ok() {
+    if input.expect_delim('&').is_err() {
       return Err(input.new_custom_error(SelectorParseErrorKind::MissingNestingPrefix));
     }
     input.reset(&state);
@@ -2408,7 +2406,7 @@ where
     let location = input.current_source_location();
     match input.next_including_whitespace() {
       Ok(&Token::Delim('*')) if !in_attr_selector => Ok(OptionalQName::Some(namespace, None)),
-      Ok(&Token::Ident(ref local_name)) => Ok(OptionalQName::Some(namespace, Some(local_name.clone()))),
+      Ok(Token::Ident(local_name)) => Ok(OptionalQName::Some(namespace, Some(local_name.clone()))),
       Ok(t) if in_attr_selector => {
         let e = SelectorParseErrorKind::InvalidQualNameInAttr(t.clone());
         Err(location.new_custom_error(e))
@@ -2420,7 +2418,7 @@ where
 
   let start = input.state();
   // FIXME: remove clone() when lifetimes are non-lexical
-  match input.next_including_whitespace().map(|t| t.clone()) {
+  match input.next_including_whitespace().cloned() {
     Ok(Token::Ident(value)) => {
       let after_ident = input.state();
       match input.next_including_whitespace() {
@@ -2447,7 +2445,7 @@ where
     Ok(Token::Delim('*')) => {
       let after_star = input.state();
       // FIXME: remove clone() when lifetimes are non-lexical
-      match input.next_including_whitespace().map(|t| t.clone()) {
+      match input.next_including_whitespace().cloned() {
         Ok(Token::Delim('|')) => explicit_namespace(input, QNamePrefix::ExplicitAnyNamespace),
         result => {
           input.reset(&after_star);
@@ -2571,17 +2569,17 @@ where
   let attribute_flags = parse_attribute_flags(input)?;
 
   let value = value.into();
-  let case_sensitivity;
+
   // copied from to_ascii_lowercase function, so we can know whether it is already lower case.
   let (local_name_lower_cow, local_name_is_ascii_lowercase) =
-    if let Some(first_uppercase) = local_name.bytes().position(|byte| byte >= b'A' && byte <= b'Z') {
+    if let Some(first_uppercase) = local_name.bytes().position(|byte: u8| byte.is_ascii_uppercase()) {
       let mut string = local_name.to_string();
       string[first_uppercase..].make_ascii_lowercase();
       (string.into(), false)
     } else {
       (local_name.clone(), true)
     };
-  case_sensitivity = attribute_flags.to_case_sensitivity(local_name_lower_cow.as_ref(), namespace.is_some());
+  let case_sensitivity = attribute_flags.to_case_sensitivity(local_name_lower_cow.as_ref(), namespace.is_some());
   let local_name_lower = local_name_lower_cow.into();
   let local_name = local_name.into();
   if namespace.is_some() || !local_name_is_ascii_lowercase {
@@ -2967,7 +2965,7 @@ where
 {
   let start = input.state();
   let token_location = input.current_source_location();
-  let token = match input.next_including_whitespace().map(|t| t.clone()) {
+  let token = match input.next_including_whitespace().cloned() {
     Ok(t) => t,
     Err(..) => {
       input.reset(&start);
@@ -3150,6 +3148,7 @@ pub mod tests {
   pub enum PseudoClass {
     Hover,
     Active,
+    Current,
     Lang(String),
   }
 
@@ -3157,6 +3156,8 @@ pub mod tests {
   pub enum PseudoElement {
     Before,
     After,
+    Named(String),
+    Functional(String, String),
   }
 
   impl<'i> parser::PseudoElement<'i> for PseudoElement {
@@ -3193,6 +3194,7 @@ pub mod tests {
       match *self {
         PseudoClass::Hover => dest.write_str(":hover"),
         PseudoClass::Active => dest.write_str(":active"),
+        PseudoClass::Current => dest.write_str(":current"),
         PseudoClass::Lang(ref lang) => {
           dest.write_str(":lang(")?;
           serialize_identifier(lang, dest)?;
@@ -3210,6 +3212,12 @@ pub mod tests {
       match *self {
         PseudoElement::Before => dest.write_str("::before"),
         PseudoElement::After => dest.write_str("::after"),
+        PseudoElement::Named(ref name) => write!(dest, "::{}", name),
+        PseudoElement::Functional(ref name, ref argument) => {
+          write!(dest, "::{}(", name)?;
+          serialize_identifier(argument, dest)?;
+          dest.write_char(')')
+        }
       }
     }
   }
@@ -3352,6 +3360,7 @@ pub mod tests {
       match_ignore_ascii_case! { &name,
           "hover" => return Ok(PseudoClass::Hover),
           "active" => return Ok(PseudoClass::Active),
+          "current" => return Ok(PseudoClass::Current),
           _ => {}
       }
       Err(location.new_custom_error(SelectorParseErrorKind::UnsupportedPseudoClass(name)))
@@ -3380,9 +3389,29 @@ pub mod tests {
       match_ignore_ascii_case! { &name,
           "before" => return Ok(PseudoElement::Before),
           "after" => return Ok(PseudoElement::After),
+          "details-content" | "target-text" | "search-text" | "picker-icon" |
+          "checkmark" | "grammar-error" | "spelling-error" => {
+            return Ok(PseudoElement::Named(name.to_ascii_lowercase()));
+          },
           _ => {}
       }
       Err(location.new_custom_error(SelectorParseErrorKind::UnsupportedPseudoElement(name)))
+    }
+
+    fn parse_functional_pseudo_element<'t>(
+      &self,
+      name: CowRcStr<'i>,
+      arguments: &mut CssParser<'i, 't>,
+    ) -> Result<PseudoElement, SelectorParseError<'i>> {
+      let argument = match_ignore_ascii_case! { &name,
+        "highlight" => arguments.expect_ident()?.to_string(),
+        "picker" => {
+          arguments.expect_ident_matching("select")?;
+          "select".to_owned()
+        },
+        _ => return Err(arguments.new_custom_error(SelectorParseErrorKind::UnsupportedPseudoElement(name))),
+      };
+      Ok(PseudoElement::Functional(name.to_ascii_lowercase(), argument))
     }
 
     fn default_namespace(&self) -> Option<DummyAtom> {
@@ -3412,10 +3441,10 @@ pub mod tests {
     parse_ns_expected(input, parser, None)
   }
 
-  fn parse_ns_expected<'i, 'a>(
+  fn parse_ns_expected<'i>(
     input: &'i str,
     parser: &DummyParser,
-    expected: Option<&'a str>,
+    expected: Option<&str>,
   ) -> Result<SelectorList<'i, DummySelectorImpl>, SelectorParseError<'i>> {
     let mut parser_input = ParserInput::new(input);
     let result = SelectorList::parse(
@@ -3850,7 +3879,7 @@ pub mod tests {
           Component::Combinator(Combinator::Child),
           Component::Class(DummyAtom::from("ok")),
         ],
-        (1 << 20) + (1 << 10) + (0 << 0),
+        (1 << 20) + (1 << 10),
         Default::default(),
       )]))
     );

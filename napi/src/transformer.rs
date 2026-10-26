@@ -628,9 +628,8 @@ fn call_visitor<V: Serialize + Deserialize<'static>>(
   let js_value = env.to_js_value(value)?;
   let res = visit.call(None, &[js_value])?;
   let new_value: Option<V> = env.from_js_value(res).map(serde_detach::detach)?;
-  match new_value {
-    Some(new_value) => *value = new_value,
-    None => {}
+  if let Some(new_value) = new_value {
+    *value = new_value
   }
 
   Ok(())

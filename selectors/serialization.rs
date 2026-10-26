@@ -300,7 +300,7 @@ where
     S: serde::Serializer,
   {
     let c: SerializedComponent<'_, 'i, Impl, _, _, _> = match self {
-      Component::Combinator(c) => SerializedComponent::Combinator { value: c.clone() },
+      Component::Combinator(c) => SerializedComponent::Combinator { value: *c },
       Component::ExplicitUniversalType => SerializedComponent::Universal,
       Component::ExplicitAnyNamespace => SerializedComponent::Namespace(Namespace::Any),
       Component::ExplicitNoNamespace => SerializedComponent::Namespace(Namespace::None),
@@ -328,8 +328,8 @@ where
         namespace: None,
         name: local_name.as_ref().into(),
         operation: Some(AttrOperation {
-          operator: operator.clone(),
-          case_sensitivity: case_sensitivity.clone(),
+          operator: *operator,
+          case_sensitivity: *case_sensitivity,
           value: value.as_ref().into(),
         }),
       }),
@@ -354,8 +354,8 @@ where
             case_sensitivity,
             expected_value,
           } => Some(AttrOperation {
-            operator: operator.clone(),
-            case_sensitivity: case_sensitivity.clone(),
+            operator: *operator,
+            case_sensitivity: *case_sensitivity,
             value: expected_value.as_ref().into(),
           }),
         },
@@ -480,7 +480,7 @@ where
       SerializedComponent::Class { name } => Component::Class(name.into()),
       SerializedComponent::Attribute(attr) => {
         let (local_name_lower_cow, local_name_is_ascii_lowercase) =
-          if let Some(first_uppercase) = attr.name.bytes().position(|byte| byte >= b'A' && byte <= b'Z') {
+          if let Some(first_uppercase) = attr.name.bytes().position(|byte: u8| byte.is_ascii_uppercase()) {
             let mut string = attr.name.to_string();
             string[first_uppercase..].make_ascii_lowercase();
             (string.into(), false)

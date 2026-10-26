@@ -285,7 +285,6 @@ fn hash2(hash: u32) -> u32 {
 fn create_and_insert_some_stuff() {
   use rustc_hash::FxHasher;
   use std::hash::{Hash, Hasher};
-  use std::mem::transmute;
 
   fn hash_as_str(i: usize) -> u32 {
     let mut hasher = FxHasher::default();
@@ -299,9 +298,7 @@ fn create_and_insert_some_stuff() {
 
   // Statically assert that ARRAY_SIZE is a multiple of 8, which
   // BloomStorageBool relies on.
-  unsafe {
-    transmute::<[u8; ARRAY_SIZE % 8], [u8; 0]>([]);
-  }
+  const _: [(); 0] = [(); ARRAY_SIZE % 8];
 
   for i in 0_usize..1000 {
     bf.insert_hash(hash_as_str(i));
@@ -407,11 +404,15 @@ mod bench {
   #[bench]
   fn remove_10(b: &mut test::Bencher) {
     let mut bf = BloomFilter::new();
-    let mut gen = HashGenerator::default();
-    // Note: this will underflow, and that's ok.
+    // Balance each removal with an insertion, including in debug test runs.
     b.iter(|| {
-      for _ in 0..10 {
-        bf.remove_hash(gen.next())
+      let mut gen = HashGenerator::default();
+      let hashes = std::array::from_fn::<_, 10, _>(|_| gen.next());
+      for hash in hashes {
+        bf.insert_hash(hash);
+      }
+      for hash in hashes {
+        bf.remove_hash(hash);
       }
     });
   }

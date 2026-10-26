@@ -434,7 +434,7 @@ fn sourcemap() -> Result<(), Box<dyn std::error::Error>> {
   cmd.arg("--sourcemap");
   cmd.assert().success();
 
-  outfile.assert(predicate::str::contains(&format!(
+  outfile.assert(predicate::str::contains(format!(
     "/*# sourceMappingURL={}.map */",
     outfile.path().to_str().unwrap()
   )));

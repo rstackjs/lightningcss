@@ -117,7 +117,7 @@ pub(crate) fn derive_into_owned(input: TokenStream) -> TokenStream {
   let has_lifetime = generics
     .params
     .first()
-    .map_or(false, |v| matches!(v, syn::GenericParam::Lifetime(..)));
+    .is_some_and(|v| matches!(v, syn::GenericParam::Lifetime(..)));
   let has_generic = !generics.params.is_empty();
 
   // Prepend `'any` to generics

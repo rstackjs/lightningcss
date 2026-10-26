@@ -26,7 +26,7 @@ pub fn derive_parse(input: TokenStream) -> TokenStream {
   let (impl_generics, _, where_clause) = generics.split_for_impl();
 
   let imp = match &data {
-    Data::Enum(data) => derive_enum(&data, &ident, &opts),
+    Data::Enum(data) => derive_enum(data, &ident, &opts),
     _ => todo!(),
   };
 
@@ -171,7 +171,7 @@ fn derive_enum(data: &DataEnum, ident: &Ident, opts: &CssOptions) -> TokenStream
     #idents
   };
 
-  output.into()
+  output
 }
 
 pub struct CssOptions {
@@ -201,10 +201,8 @@ impl Parse for CssOptions {
       let _: Token![=] = input.parse()?;
       let v: Ident = input.parse()?;
 
-      if k == "case" {
-        if v == "lower" {
-          case = convert_case::Case::Flat;
-        }
+      if k == "case" && v == "lower" {
+        case = convert_case::Case::Flat;
       }
     }
 
