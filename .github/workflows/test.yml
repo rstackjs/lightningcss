@@ -23,6 +23,11 @@ jobs:
       - run: cargo fmt
       - run: cargo test --all-features
 
+  validate-crates:
+    uses: ./.github/workflows/release-crates.yml
+    with:
+      dry_run: true
+
   test-js:
     runs-on: ubuntu-latest
     steps:

@@ -1,17 +1,18 @@
 [package]
 authors = ["Devon Govett <devongovett@gmail.com>"]
-name = "lightningcss_node"
-version = "0.1.0"
+name = "rspack-lightningcss-node"
+version.workspace = true
 edition = "2021"
 publish = false
 
 [lib]
+name = "lightningcss_node"
 # The addon links against Node.js at runtime and has no Rust unit tests.
 test = false
 crate-type = ["cdylib"]
 
 [dependencies]
-lightningcss-napi = { version = "0.4.9", path = "../napi", features = [
+lightningcss-napi = { workspace = true, features = [
   "bundler",
   "visitor",
 ] }

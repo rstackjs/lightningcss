@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - package: rspack_lightningcss
+          - package: rspack-lightningcss
             bench: transform
 
     steps:

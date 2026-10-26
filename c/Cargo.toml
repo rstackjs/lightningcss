@@ -1,15 +1,16 @@
 [package]
 authors = ["Devon Govett <devongovett@gmail.com>"]
-name = "lightningcss_c_bindings"
-version = "0.1.0"
+name = "rspack-lightningcss-c-bindings"
+version.workspace = true
 edition = "2021"
 publish = false
 
 [lib]
+name = "lightningcss_c_bindings"
 crate-type = ["cdylib"]
 
 [dependencies]
-lightningcss = { package = "rspack_lightningcss", path = "../", features = ["browserslist"] }
+lightningcss = { workspace = true, features = ["browserslist"] }
 parcel_sourcemap = { version = "2.1.1", features = ["json"] }
 browserslist-rs = { version = "0.21.0" }
 
