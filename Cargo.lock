@@ -1502,7 +1502,7 @@ dependencies = [
 
 [[package]]
 name = "rspack-lightningcss"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ahash 0.8.12",
  "assert_cmd",
@@ -1541,7 +1541,7 @@ dependencies = [
 
 [[package]]
 name = "rspack-lightningcss-c-bindings"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "browserslist-rs",
  "cbindgen",
@@ -1551,7 +1551,7 @@ dependencies = [
 
 [[package]]
 name = "rspack-lightningcss-derive"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "convert_case",
  "proc-macro2",
@@ -1561,7 +1561,7 @@ dependencies = [
 
 [[package]]
 name = "rspack-lightningcss-napi"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "crossbeam-channel",
  "cssparser",
@@ -1578,7 +1578,7 @@ dependencies = [
 
 [[package]]
 name = "rspack-lightningcss-node"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "jemallocator",
  "napi",
@@ -1589,7 +1589,7 @@ dependencies = [
 
 [[package]]
 name = "rspack-lightningcss-selectors"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bitflags 2.6.0",
  "cssparser",
@@ -1606,7 +1606,7 @@ dependencies = [
 
 [[package]]
 name = "rspack-lightningcss-static-self"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "indexmap 2.7.0",
  "rspack-lightningcss-static-self-derive",
@@ -1615,7 +1615,7 @@ dependencies = [
 
 [[package]]
 name = "rspack-lightningcss-static-self-derive"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2",
  "quote",

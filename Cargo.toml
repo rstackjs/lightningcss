@@ -11,16 +11,16 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 repository = "https://github.com/rstackjs/lightningcss"
 
 [workspace.dependencies]
-rspack-lightningcss = { version = "=0.1.0", path = "." }
-rspack-lightningcss-derive = { version = "=0.1.0", path = "derive" }
-rspack-lightningcss-napi = { version = "=0.1.0", path = "napi" }
-rspack-lightningcss-selectors = { version = "=0.1.0", path = "selectors" }
-rspack-lightningcss-static-self = { version = "=0.1.0", path = "static-self" }
-rspack-lightningcss-static-self-derive = { version = "=0.1.0", path = "static-self-derive" }
+rspack-lightningcss = { version = "=0.1.1", path = "." }
+rspack-lightningcss-derive = { version = "=0.1.1", path = "derive" }
+rspack-lightningcss-napi = { version = "=0.1.1", path = "napi" }
+rspack-lightningcss-selectors = { version = "=0.1.1", path = "selectors" }
+rspack-lightningcss-static-self = { version = "=0.1.1", path = "static-self" }
+rspack-lightningcss-static-self-derive = { version = "=0.1.1", path = "static-self-derive" }
 
 [package]
 authors = ["Devon Govett <devongovett@gmail.com>"]
