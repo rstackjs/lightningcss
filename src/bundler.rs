@@ -470,10 +470,9 @@ where
 
     let mut source_map_source_index = None;
     if let Some(source_map) = &self.source_map {
-      // Only add source if we don't have an input source map.
-      // If we do, this will be handled by the printer when remapping locations.
-      let sm = stylesheet.source_map_url(0);
-      if sm.is_none() || !sm.unwrap().starts_with("data") {
+      // Only omit the CSS source when the input source map can actually be read.
+      // Otherwise, the printer needs this index as a fallback for generated mappings.
+      if stylesheet.source_map::<S>(0).is_none() {
         let mut source_map = source_map.lock().unwrap();
         let source_index = source_map.add_source(filename);
         source_map.set_source_content(source_index, code);
