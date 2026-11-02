@@ -1,0 +1,16 @@
+{
+  "name": "@rstack/skill-upstream-pr-migration",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "migrate": "zx scripts/migrate.mjs",
+    "test": "node --test scripts/migrate.test.mjs"
+  },
+  "devDependencies": {
+    "zx": "8.8.5"
+  }
+}
