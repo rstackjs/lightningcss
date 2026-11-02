@@ -185,3 +185,21 @@ fn translates_bundler_indices_alongside_inline_remapping() {
   assert_eq!((original.original_line, original.original_column), (12, 3));
   assert!(!map.sources.iter().any(|(_, source, _)| source == "/entry.css"));
 }
+
+#[test]
+fn registers_bundled_source_when_input_map_cannot_be_read() {
+  for source_map_url in ["data-bundle.map", "data:application/json,not-a-map"] {
+    let entry = format!(".entry {{ color: red }}\n/*# sourceMappingURL={source_map_url} */");
+    let fs = TestProvider(HashMap::from([(PathBuf::from("/entry.css"), entry.clone())]));
+    let mut map = TestSourceMap::default();
+    let mut bundler = Bundler::new(&fs, Some(&mut map), ParserOptions::default());
+    let stylesheet = bundler.bundle(Path::new("/entry.css")).unwrap();
+    stylesheet.to_css(PrinterOptions::default(), Some(&mut map)).unwrap();
+
+    assert_eq!(map.mappings.len(), 1);
+    let source = map.mappings[0].source;
+    assert_eq!(source, 100);
+    assert_eq!(map.get_source(source), Some("/entry.css"));
+    assert_eq!(map.get_source_content(source), Some(entry.as_str()));
+  }
+}
