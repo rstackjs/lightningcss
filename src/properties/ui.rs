@@ -17,6 +17,7 @@ use crate::visitor::Visit;
 use bitflags::bitflags;
 use cssparser::*;
 use smallvec::SmallVec;
+use std::fmt::Write;
 
 use super::custom::Token;
 use super::{CustomProperty, CustomPropertyName, TokenList, TokenOrValue};
@@ -371,7 +372,8 @@ impl<'i> ToCss for Appearance<'i> {
   where
     W: std::fmt::Write,
   {
-    dest.write_str(self.to_str())
+    dest.write_str(self.to_str())?;
+    Ok(())
   }
 }
 
@@ -480,7 +482,8 @@ impl ToCss for ColorScheme {
     W: std::fmt::Write,
   {
     if self.is_empty() {
-      return dest.write_str("normal");
+      dest.write_str("normal")?;
+      return Ok(());
     }
 
     if self.contains(ColorScheme::Light) {
@@ -497,7 +500,8 @@ impl ToCss for ColorScheme {
     if self.contains(ColorScheme::Only) {
       // Avoid parsing `color-scheme: only` as `color-scheme:  only`
       if !self.intersects(ColorScheme::Light | ColorScheme::Dark) {
-        return dest.write_str("only");
+        dest.write_str("only")?;
+        return Ok(());
       }
       dest.write_str(" only")?;
     }

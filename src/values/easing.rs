@@ -115,12 +115,12 @@ impl ToCss for EasingFunction {
     W: std::fmt::Write,
   {
     match self {
-      EasingFunction::Linear => dest.write_str("linear"),
-      EasingFunction::Ease => dest.write_str("ease"),
-      EasingFunction::EaseIn => dest.write_str("ease-in"),
-      EasingFunction::EaseOut => dest.write_str("ease-out"),
-      EasingFunction::EaseInOut => dest.write_str("ease-in-out"),
-      _ if self.is_ease() => dest.write_str("ease"),
+      EasingFunction::Linear => dest.write_str("linear")?,
+      EasingFunction::Ease => dest.write_str("ease")?,
+      EasingFunction::EaseIn => dest.write_str("ease-in")?,
+      EasingFunction::EaseOut => dest.write_str("ease-out")?,
+      EasingFunction::EaseInOut => dest.write_str("ease-in-out")?,
+      _ if self.is_ease() => dest.write_str("ease")?,
       x if *x
         == EasingFunction::CubicBezier {
           x1: 0.42,
@@ -129,7 +129,7 @@ impl ToCss for EasingFunction {
           y2: 1.0,
         } =>
       {
-        dest.write_str("ease-in")
+        dest.write_str("ease-in")?;
       }
       x if *x
         == EasingFunction::CubicBezier {
@@ -139,7 +139,7 @@ impl ToCss for EasingFunction {
           y2: 1.0,
         } =>
       {
-        dest.write_str("ease-out")
+        dest.write_str("ease-out")?;
       }
       x if *x
         == EasingFunction::CubicBezier {
@@ -149,7 +149,7 @@ impl ToCss for EasingFunction {
           y2: 1.0,
         } =>
       {
-        dest.write_str("ease-in-out")
+        dest.write_str("ease-in-out")?;
       }
       EasingFunction::CubicBezier { x1, y1, x2, y2 } => {
         dest.write_str("cubic-bezier(")?;
@@ -160,24 +160,25 @@ impl ToCss for EasingFunction {
         x2.to_css(dest)?;
         dest.delim(',', false)?;
         y2.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
       }
       EasingFunction::Steps {
         count: 1,
         position: StepPosition::Start,
-      } => dest.write_str("step-start"),
+      } => dest.write_str("step-start")?,
       EasingFunction::Steps {
         count: 1,
         position: StepPosition::End,
-      } => dest.write_str("step-end"),
+      } => dest.write_str("step-end")?,
       EasingFunction::Steps { count, position } => {
         dest.write_str("steps(")?;
         write!(dest, "{}", count)?;
         dest.delim(',', false)?;
         position.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
       }
-    }
+    };
+    Ok(())
   }
 }
 

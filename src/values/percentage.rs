@@ -12,6 +12,7 @@ use crate::traits::{
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
+use std::fmt::Write;
 
 /// A CSS [`<percentage>`](https://www.w3.org/TR/css-values-4/#percentages) value.
 ///
@@ -66,9 +67,11 @@ impl ToCss for Percentage {
       percent.to_css(&mut s)?;
       if self.0 < 0.0 {
         dest.write_char('-')?;
-        dest.write_str(s.trim_start_matches("-0"))
+        dest.write_str(s.trim_start_matches("-0"))?;
+        Ok(())
       } else {
-        dest.write_str(s.trim_start_matches('0'))
+        dest.write_str(s.trim_start_matches('0'))?;
+        Ok(())
       }
     } else {
       percent.to_css(dest)?;
