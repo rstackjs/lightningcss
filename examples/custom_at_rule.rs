@@ -42,14 +42,18 @@ fn main() {
   stylesheet.visit(&mut ApplyVisitor { rules: &style_rules }).unwrap();
 
   let result = stylesheet
-    .to_css(PrinterOptions {
-      targets: Browsers {
-        chrome: Some(100 << 16),
-        ..Browsers::default()
-      }
-      .into(),
-      ..PrinterOptions::default()
-    })
+    .to_css(
+      PrinterOptions {
+        targets: Browsers {
+          chrome: Some(100 << 16),
+          ..Browsers::default()
+        }
+        .into(),
+        ..PrinterOptions::default()
+      },
+      #[cfg(feature = "custom_sourcemap")]
+      None::<&mut ()>,
+    )
     .unwrap();
   println!("{}", result.code);
 }

@@ -13,10 +13,14 @@ fn minify_test(source: &str, expected: &str) {
   let mut stylesheet = StyleSheet::parse_with(source, ParserOptions::default(), &mut TestAtRuleParser).unwrap();
   stylesheet.minify(Default::default()).unwrap();
   let res = stylesheet
-    .to_css(PrinterOptions {
-      minify: true,
-      ..PrinterOptions::default()
-    })
+    .to_css(
+      PrinterOptions {
+        minify: true,
+        ..PrinterOptions::default()
+      },
+      #[cfg(feature = "custom_sourcemap")]
+      None::<&mut ()>,
+    )
     .unwrap();
   assert_eq!(res.code, expected);
 }

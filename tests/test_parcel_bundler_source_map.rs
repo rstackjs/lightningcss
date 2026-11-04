@@ -34,10 +34,7 @@ fn assert_bundled_source(css: &'static str) {
   let mut bundler = Bundler::new(&fs, Some(&mut map), ParserOptions::default());
   let stylesheet = bundler.bundle(Path::new("/entry.css")).unwrap();
   stylesheet
-    .to_css(PrinterOptions {
-      source_map: Some(&mut map),
-      ..PrinterOptions::default()
-    })
+    .to_css(PrinterOptions::default(), Some(&mut map))
     .unwrap();
 
   let source_index = map.find_closest_mapping(0, 0).unwrap().original.unwrap().source;

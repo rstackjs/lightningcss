@@ -19,7 +19,7 @@
 //! };
 //!
 //! let fs = FileProvider::new();
-//! let mut bundler = Bundler::new(&fs, None, ParserOptions::default());
+//! let mut bundler = Bundler::new(&fs, None::<&mut ()>, ParserOptions::default());
 //! let stylesheet = bundler.bundle(Path::new("style.css")).unwrap();
 //! ```
 
@@ -43,6 +43,7 @@ use crate::{
 use crate::{
   error::{Error, ParserError},
   media_query::MediaList,
+  printer::SourceMap,
   rules::{
     import::ImportRule,
     media::MediaRule,
@@ -52,7 +53,6 @@ use crate::{
   stylesheet::{ParserOptions, StyleSheet},
 };
 use dashmap::DashMap;
-use parcel_sourcemap::SourceMap;
 use rayon::prelude::*;
 use std::{
   collections::HashSet,
@@ -63,8 +63,8 @@ use std::{
 
 /// A Bundler combines a CSS file and all imported dependencies together into
 /// a single merged style sheet.
-pub struct Bundler<'a, 's, P, T: AtRuleParser<'a>> {
-  source_map: Option<Mutex<&'s mut SourceMap>>,
+pub struct Bundler<'a, 's, P, T: AtRuleParser<'a>, S = ()> {
+  source_map: Option<Mutex<&'s mut S>>,
   fs: &'a P,
   source_indexes: DashMap<PathBuf, u32>,
   stylesheets: Mutex<Vec<BundleStyleSheet<'a, T::AtRule>>>,
@@ -236,15 +236,15 @@ impl<'i, T: std::error::Error> BundleErrorKind<'i, T> {
   }
 }
 
-impl<'a, 's, P: SourceProvider> Bundler<'a, 's, P, DefaultAtRuleParser> {
+impl<'a, 's, P: SourceProvider, S: SourceMap + Send> Bundler<'a, 's, P, DefaultAtRuleParser, S> {
   /// Creates a new Bundler using the given source provider.
   /// If a source map is given, the content of each source file included in the bundle will
   /// be added accordingly.
   pub fn new(
     fs: &'a P,
-    source_map: Option<&'s mut SourceMap>,
+    source_map: Option<&'s mut S>,
     options: ParserOptions<'a>,
-  ) -> Bundler<'a, 's, P, DefaultAtRuleParser> {
+  ) -> Bundler<'a, 's, P, DefaultAtRuleParser, S> {
     Bundler {
       source_map: source_map.map(Mutex::new),
       fs,
@@ -256,7 +256,8 @@ impl<'a, 's, P: SourceProvider> Bundler<'a, 's, P, DefaultAtRuleParser> {
   }
 }
 
-impl<'a, 's, P: SourceProvider, T: AtRuleParser<'a> + Clone + Sync + Send> Bundler<'a, 's, P, T>
+impl<'a, 's, P: SourceProvider, T: AtRuleParser<'a> + Clone + Sync + Send, S: SourceMap + Send>
+  Bundler<'a, 's, P, T, S>
 where
   T::AtRule: Sync + Send + ToCss + Clone,
 {
@@ -265,7 +266,7 @@ where
   /// be added accordingly.
   pub fn new_with_at_rule_parser(
     fs: &'a P,
-    source_map: Option<&'s mut SourceMap>,
+    source_map: Option<&'s mut S>,
     options: ParserOptions<'a>,
     at_rule_parser: &'s mut T,
   ) -> Self {
@@ -471,10 +472,10 @@ where
     if let Some(source_map) = &self.source_map {
       // Only omit the CSS source when the input source map can actually be read.
       // Otherwise, the printer needs this index as a fallback for generated mappings.
-      if stylesheet.source_map(0).is_none() {
+      if stylesheet.source_map::<S>(0).is_none() {
         let mut source_map = source_map.lock().unwrap();
         let source_index = source_map.add_source(filename);
-        let _ = source_map.set_source_content(source_index as usize, code);
+        source_map.set_source_content(source_index, code);
         source_map_source_index = Some(source_index);
       }
     }
@@ -969,9 +970,9 @@ mod tests {
   );
 
   fn bundle<P: SourceProvider>(fs: P, entry: &str) -> String {
-    let mut bundler = Bundler::new(&fs, None, ParserOptions::default());
+    let mut bundler = Bundler::<_, _, ()>::new(&fs, None, ParserOptions::default());
     let stylesheet = bundler.bundle(Path::new(entry)).unwrap();
-    stylesheet.to_css(PrinterOptions::default()).unwrap().code
+    stylesheet.to_css(PrinterOptions::default(), None::<&mut ()>).unwrap().code
   }
 
   fn bundle_css_module<P: SourceProvider>(
@@ -988,7 +989,7 @@ mod tests {
     project_root: Option<&str>,
     pattern: &'static str,
   ) -> (String, CssModuleExports) {
-    let mut bundler = Bundler::new(
+    let mut bundler = Bundler::<_, _, ()>::new(
       &fs,
       None,
       ParserOptions {
@@ -1003,16 +1004,19 @@ mod tests {
     let mut stylesheet = bundler.bundle(Path::new(entry)).unwrap();
     stylesheet.minify(MinifyOptions::default()).unwrap();
     let res = stylesheet
-      .to_css(PrinterOptions {
-        project_root,
-        ..PrinterOptions::default()
-      })
+      .to_css(
+        PrinterOptions {
+          project_root,
+          ..PrinterOptions::default()
+        },
+        None::<&mut ()>,
+      )
       .unwrap();
     (res.code, res.exports.unwrap())
   }
 
   fn bundle_custom_media<P: SourceProvider>(fs: P, entry: &str) -> String {
-    let mut bundler = Bundler::new(
+    let mut bundler = Bundler::<_, _, ()>::new(
       &fs,
       None,
       ParserOptions {
@@ -1035,10 +1039,13 @@ mod tests {
       })
       .unwrap();
     stylesheet
-      .to_css(PrinterOptions {
-        targets,
-        ..PrinterOptions::default()
-      })
+      .to_css(
+        PrinterOptions {
+          targets,
+          ..PrinterOptions::default()
+        },
+        None::<&mut ()>,
+      )
       .unwrap()
       .code
   }
@@ -1048,7 +1055,7 @@ mod tests {
     entry: &str,
     maybe_cb: Option<Box<dyn FnOnce(BundleErrorKind<P::Error>) -> ()>>,
   ) {
-    let mut bundler = Bundler::new(&fs, None, ParserOptions::default());
+    let mut bundler = Bundler::<_, _, ()>::new(&fs, None, ParserOptions::default());
     let res = bundler.bundle(Path::new(entry));
     match res {
       Ok(_) => unreachable!(),
@@ -2181,6 +2188,7 @@ mod tests {
   }
 
   #[test]
+  #[cfg(feature = "sourcemap")]
   fn test_source_map() {
     let source = r#".imported {
       content: "yay, file support!";
@@ -2212,11 +2220,13 @@ mod tests {
     let mut stylesheet = bundler.bundle(Path::new("/a.css")).unwrap();
     stylesheet.minify(MinifyOptions::default()).unwrap();
     stylesheet
-      .to_css(PrinterOptions {
-        source_map: Some(&mut sm),
-        minify: true,
-        ..PrinterOptions::default()
-      })
+      .to_css(
+        PrinterOptions {
+          minify: true,
+          ..PrinterOptions::default()
+        },
+        Some(&mut sm),
+      )
       .unwrap();
     let map = sm.to_json(None).unwrap();
     assert_eq!(
