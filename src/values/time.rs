@@ -4,13 +4,11 @@ use super::angle::impl_try_from_angle;
 use super::calc::Calc;
 use super::number::{CSSNumber, NumericRange};
 use crate::error::{ParserError, PrinterError};
-use crate::printer::Printer;
 use crate::traits::private::AddInternal;
 use crate::traits::{impl_op, Map, Op, Parse, ParseNumeric, Sign, ToCss, Zero};
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 /// A CSS [`<time>`](https://www.w3.org/TR/css-values-4/#time) value, in either
 /// seconds or milliseconds.
@@ -106,10 +104,7 @@ impl<'i> TryFrom<&Token<'i>> for Time {
 }
 
 impl ToCss for Time {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     // 0.1s is shorter than 100ms
     // anything smaller is longer
     match self {

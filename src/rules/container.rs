@@ -1,7 +1,6 @@
 //! The `@container` rule.
 
 use cssparser::*;
-use std::fmt::Write;
 
 use super::Location;
 use super::{CssRuleList, MinifyContext};
@@ -11,7 +10,6 @@ use crate::media_query::{
   MediaFeatureType, Operator, QueryCondition, QueryConditionFlags, QueryFeature, ValueType,
 };
 use crate::parser::{DefaultAtRule, ParserOptions};
-use crate::printer::Printer;
 use crate::properties::custom::TokenList;
 use crate::properties::{Property, PropertyId};
 #[cfg(feature = "serde")]
@@ -100,10 +98,11 @@ define_query_features! {
 }
 
 impl FeatureToCss for ContainerSizeFeatureId {
-  fn to_css_with_prefix<W>(&self, prefix: &str, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css_with_prefix<PrinterT: crate::printer::PrinterTrait>(
+    &self,
+    prefix: &str,
+    dest: &mut PrinterT,
+  ) -> Result<(), PrinterError> {
     dest.write_str(prefix)?;
     self.to_css(dest)
   }
@@ -187,10 +186,11 @@ define_query_features! {
 }
 
 impl FeatureToCss for ScrollStateFeatureId {
-  fn to_css_with_prefix<W>(&self, prefix: &str, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css_with_prefix<PrinterT: crate::printer::PrinterTrait>(
+    &self,
+    prefix: &str,
+    dest: &mut PrinterT,
+  ) -> Result<(), PrinterError> {
     dest.write_str(prefix)?;
     self.to_css(dest)
   }
@@ -350,15 +350,12 @@ impl<'i> ParseWithOptions<'i> for ContainerCondition<'i> {
 }
 
 impl<'i> ToCss for ContainerCondition<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match *self {
       ContainerCondition::Feature(ref f) => f.to_css(dest),
       ContainerCondition::Not(ref c) => {
         dest.write_str("not ")?;
-        to_css_with_parens_if_needed(&**c, dest, c.needs_parens(None, &dest.targets.current))
+        to_css_with_parens_if_needed(&**c, dest, c.needs_parens(None, &dest.targets().current))
       }
       ContainerCondition::Operation {
         ref conditions,
@@ -388,16 +385,13 @@ impl<'i> ToCss for ContainerCondition<'i> {
 }
 
 impl<'i> ToCss for StyleQuery<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match *self {
       StyleQuery::Declaration(ref f) => f.to_css(dest, false),
       StyleQuery::Property(ref f) => f.to_css(dest),
       StyleQuery::Not(ref c) => {
         dest.write_str("not ")?;
-        to_css_with_parens_if_needed(&**c, dest, c.needs_parens(None, &dest.targets.current))
+        to_css_with_parens_if_needed(&**c, dest, c.needs_parens(None, &dest.targets().current))
       }
       StyleQuery::Operation {
         ref conditions,
@@ -408,15 +402,12 @@ impl<'i> ToCss for StyleQuery<'i> {
 }
 
 impl<'i> ToCss for ScrollStateQuery<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match *self {
       ScrollStateQuery::Feature(ref f) => f.to_css(dest),
       ScrollStateQuery::Not(ref c) => {
         dest.write_str("not ")?;
-        to_css_with_parens_if_needed(&**c, dest, c.needs_parens(None, &dest.targets.current))
+        to_css_with_parens_if_needed(&**c, dest, c.needs_parens(None, &dest.targets().current))
       }
       ScrollStateQuery::Operation {
         ref conditions,
@@ -445,19 +436,12 @@ impl<'i> Parse<'i> for ContainerName<'i> {
 }
 
 impl<'i> ToCss for ContainerName<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     // Container name should not be hashed
     // https://github.com/vercel/next.js/issues/71233
-    self.0.to_css_with_options(
-      dest,
-      match &dest.css_module {
-        Some(css_module) => css_module.config.container,
-        None => false,
-      },
-    )
+    self
+      .0
+      .to_css_with_options(dest, dest.css_module_config().is_some_and(|config| config.container))
   }
 }
 
@@ -473,10 +457,7 @@ impl<'i, T: Clone> ContainerRule<'i, T> {
 }
 
 impl<'a, 'i, T: ToCss> ToCss for ContainerRule<'i, T> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@container ")?;
@@ -491,10 +472,10 @@ impl<'a, 'i, T: ToCss> ToCss for ContainerRule<'i, T> {
 
     if let Some(condition) = &self.condition {
       // Don't downlevel range syntax in container queries.
-      let exclude = dest.targets.current.exclude;
-      dest.targets.current.exclude.insert(Features::MediaQueries);
+      let exclude = dest.targets().current.exclude;
+      dest.targets_mut().current.exclude.insert(Features::MediaQueries);
       condition.to_css(dest)?;
-      dest.targets.current.exclude = exclude;
+      dest.targets_mut().current.exclude = exclude;
     }
 
     dest.whitespace()?;

@@ -4,11 +4,9 @@ use super::Location;
 use super::{CssRuleList, MinifyContext};
 use crate::error::{MinifyError, PrinterError};
 use crate::parser::DefaultAtRule;
-use crate::printer::Printer;
 use crate::traits::ToCss;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
-use std::fmt::Write;
 
 /// A [@starting-style](https://drafts.csswg.org/css-transitions-2/#defining-before-change-style-the-starting-style-rule) rule.
 #[derive(Debug, PartialEq, Clone)]
@@ -37,10 +35,7 @@ impl<'i, T: Clone> StartingStyleRule<'i, T> {
 }
 
 impl<'i, T: ToCss> ToCss for StartingStyleRule<'i, T> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@starting-style")?;

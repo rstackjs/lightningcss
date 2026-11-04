@@ -5,7 +5,6 @@ use super::Location;
 use crate::visitor::Visit;
 use crate::{
   error::{ParserError, PrinterError},
-  printer::Printer,
   properties::custom::TokenList,
   traits::{Parse, ToCss},
   values::{
@@ -14,7 +13,6 @@ use crate::{
   },
 };
 use cssparser::*;
-use std::fmt::Write;
 
 /// A [@property](https://drafts.css-houdini.org/css-properties-values-api/#at-property-rule) rule.
 #[derive(Debug, PartialEq, Clone)]
@@ -111,10 +109,7 @@ impl<'i> PropertyRule<'i> {
 }
 
 impl<'i> ToCss for PropertyRule<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@property ")?;
@@ -145,7 +140,7 @@ impl<'i> ToCss for PropertyRule<'i> {
       dest.whitespace()?;
       initial_value.to_css(dest)?;
 
-      if !dest.minify {
+      if !dest.options().minify {
         dest.write_char(';')?;
       }
     }

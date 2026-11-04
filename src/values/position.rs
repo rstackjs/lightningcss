@@ -4,13 +4,11 @@ use super::length::LengthPercentage;
 use super::percentage::Percentage;
 use crate::error::{ParserError, PrinterError};
 use crate::macros::enum_property;
-use crate::printer::Printer;
 use crate::targets::Browsers;
 use crate::traits::{IsCompatible, Parse, ToCss, Zero};
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 #[cfg(feature = "serde")]
 use crate::serialization::ValueWrapper;
@@ -169,10 +167,7 @@ impl<'i> Parse<'i> for Position {
 }
 
 impl ToCss for Position {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match (&self.x, &self.y) {
       (x_pos @ &HorizontalPosition::Side { side, offset: Some(_) }, &VerticalPosition::Length(ref y_lp))
         if side != HorizontalPositionKeyword::Left =>
@@ -362,14 +357,11 @@ impl<'i, S: Parse<'i>> Parse<'i> for PositionComponent<S> {
 }
 
 impl<S: ToCss> ToCss for PositionComponent<S> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     use PositionComponent::*;
     match &self {
       Center => {
-        if dest.minify {
+        if dest.options().minify {
           dest.write_str("50%")?;
           Ok(())
         } else {

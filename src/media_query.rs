@@ -2,7 +2,6 @@
 use crate::error::{ErrorWithLocation, MinifyError, MinifyErrorKind, ParserError, PrinterError};
 use crate::macros::enum_property;
 use crate::parser::starts_with_ignore_ascii_case;
-use crate::printer::Printer;
 use crate::properties::custom::{EnvironmentVariable, TokenList};
 #[cfg(feature = "visitor")]
 use crate::rules::container::{ContainerSizeFeatureId, ScrollStateFeatureId};
@@ -24,7 +23,6 @@ use cssparser::*;
 use rspack_lightningcss_static_self::IntoOwned;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
-use std::fmt::Write;
 
 #[cfg(feature = "serde")]
 use crate::serialization::ValueWrapper;
@@ -161,10 +159,7 @@ impl<'i> MediaList<'i> {
 }
 
 impl<'i> ToCss for MediaList<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     if self.media_queries.is_empty() {
       dest.write_str("not all")?;
       return Ok(());
@@ -419,10 +414,7 @@ impl<'i> MediaQuery<'i> {
 }
 
 impl<'i> ToCss for MediaQuery<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     if let Some(qual) = self.qualifier {
       qual.to_css(dest)?;
       dest.write_char(' ')?;
@@ -811,14 +803,11 @@ fn parse_paren_block<'t, 'i, P: QueryCondition<'i>>(
   })
 }
 
-pub(crate) fn to_css_with_parens_if_needed<V: ToCss, W>(
+pub(crate) fn to_css_with_parens_if_needed<V: ToCss, PrinterT: crate::printer::PrinterTrait>(
   value: V,
-  dest: &mut Printer<W>,
+  dest: &mut PrinterT,
   needs_parens: bool,
-) -> Result<(), PrinterError>
-where
-  W: std::fmt::Write,
-{
+) -> Result<(), PrinterError> {
   if needs_parens {
     dest.write_char('(')?;
   }
@@ -829,22 +818,19 @@ where
   Ok(())
 }
 
-pub(crate) fn operation_to_css<'i, V: ToCss + QueryCondition<'i>, W>(
+pub(crate) fn operation_to_css<'i, V: ToCss + QueryCondition<'i>, PrinterT: crate::printer::PrinterTrait>(
   operator: Operator,
   conditions: &Vec<V>,
-  dest: &mut Printer<W>,
-) -> Result<(), PrinterError>
-where
-  W: std::fmt::Write,
-{
+  dest: &mut PrinterT,
+) -> Result<(), PrinterError> {
   let mut iter = conditions.iter();
   let first = iter.next().unwrap();
-  to_css_with_parens_if_needed(first, dest, first.needs_parens(Some(operator), &dest.targets.current))?;
+  to_css_with_parens_if_needed(first, dest, first.needs_parens(Some(operator), &dest.targets().current))?;
   for item in iter {
     dest.write_char(' ')?;
     operator.to_css(dest)?;
     dest.write_char(' ')?;
-    to_css_with_parens_if_needed(item, dest, item.needs_parens(Some(operator), &dest.targets.current))?;
+    to_css_with_parens_if_needed(item, dest, item.needs_parens(Some(operator), &dest.targets().current))?;
   }
 
   Ok(())
@@ -861,10 +847,7 @@ impl<'i> MediaCondition<'i> {
 }
 
 impl<'i> ToCss for MediaCondition<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match *self {
       MediaCondition::Feature(ref f) => f.to_css(dest),
       MediaCondition::Not(ref c) => {
@@ -872,7 +855,7 @@ impl<'i> ToCss for MediaCondition<'i> {
           negated.to_css(dest)
         } else {
           dest.write_str("not ")?;
-          to_css_with_parens_if_needed(&**c, dest, c.needs_parens(None, &dest.targets.current))
+          to_css_with_parens_if_needed(&**c, dest, c.needs_parens(None, &dest.targets().current))
         }
       }
       MediaCondition::Operation {
@@ -908,10 +891,7 @@ pub enum MediaFeatureComparison {
 }
 
 impl ToCss for MediaFeatureComparison {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     use MediaFeatureComparison::*;
     match self {
       Equal => dest.delim('=', true),
@@ -1169,10 +1149,7 @@ where
 }
 
 impl<'i, FeatureId: FeatureToCss> ToCss for QueryFeature<'i, FeatureId> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       QueryFeature::Boolean { name } => {
         dest.write_char('(')?;
@@ -1186,7 +1163,7 @@ impl<'i, FeatureId: FeatureToCss> ToCss for QueryFeature<'i, FeatureId> {
       }
       QueryFeature::Range { name, operator, value } => {
         // If range syntax is unsupported, use min/max prefix if possible.
-        if should_compile!(dest.targets.current, MediaRangeSyntax) {
+        if should_compile!(dest.targets().current, MediaRangeSyntax) {
           return write_min_max(operator, name, value, dest, false);
         }
 
@@ -1202,7 +1179,7 @@ impl<'i, FeatureId: FeatureToCss> ToCss for QueryFeature<'i, FeatureId> {
         end,
         end_operator,
       } => {
-        if should_compile!(dest.targets.current, MediaIntervalSyntax) {
+        if should_compile!(dest.targets().current, MediaIntervalSyntax) {
           write_min_max(&start_operator.opposite(), name, start, dest, true)?;
           dest.write_str(" and ")?;
           return write_min_max(end_operator, name, end, dest, true);
@@ -1305,10 +1282,7 @@ impl<'i, FeatureId: ValueType> ValueType for MediaFeatureName<'i, FeatureId> {
 }
 
 impl<'i, FeatureId: FeatureToCss> ToCss for MediaFeatureName<'i, FeatureId> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       Self::Standard(v) => v.to_css(dest),
       Self::Custom(v) => v.to_css(dest),
@@ -1318,10 +1292,11 @@ impl<'i, FeatureId: FeatureToCss> ToCss for MediaFeatureName<'i, FeatureId> {
 }
 
 impl<'i, FeatureId: FeatureToCss> FeatureToCss for MediaFeatureName<'i, FeatureId> {
-  fn to_css_with_prefix<W>(&self, prefix: &str, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css_with_prefix<PrinterT: crate::printer::PrinterTrait>(
+    &self,
+    prefix: &str,
+    dest: &mut PrinterT,
+  ) -> Result<(), PrinterError> {
     match self {
       Self::Standard(v) => v.to_css_with_prefix(prefix, dest),
       Self::Custom(v) => {
@@ -1497,16 +1472,19 @@ define_query_features! {
 }
 
 pub(crate) trait FeatureToCss: ToCss {
-  fn to_css_with_prefix<W>(&self, prefix: &str, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write;
+  fn to_css_with_prefix<PrinterT: crate::printer::PrinterTrait>(
+    &self,
+    prefix: &str,
+    dest: &mut PrinterT,
+  ) -> Result<(), PrinterError>;
 }
 
 impl FeatureToCss for MediaFeatureId {
-  fn to_css_with_prefix<W>(&self, prefix: &str, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css_with_prefix<PrinterT: crate::printer::PrinterTrait>(
+    &self,
+    prefix: &str,
+    dest: &mut PrinterT,
+  ) -> Result<(), PrinterError> {
     match self {
       MediaFeatureId::WebKitDevicePixelRatio => {
         dest.write_str("-webkit-")?;
@@ -1523,16 +1501,13 @@ impl FeatureToCss for MediaFeatureId {
 }
 
 #[inline]
-fn write_min_max<W, FeatureId: FeatureToCss>(
+fn write_min_max<PrinterT: crate::printer::PrinterTrait, FeatureId: FeatureToCss>(
   operator: &MediaFeatureComparison,
   name: &MediaFeatureName<FeatureId>,
   value: &MediaFeatureValue,
-  dest: &mut Printer<W>,
+  dest: &mut PrinterT,
   is_range: bool,
-) -> Result<(), PrinterError>
-where
-  W: std::fmt::Write,
-{
+) -> Result<(), PrinterError> {
   let prefix = match operator {
     MediaFeatureComparison::GreaterThan => {
       if is_range {
@@ -1698,10 +1673,7 @@ impl<'i> MediaFeatureValue<'i> {
 }
 
 impl<'i> ToCss for MediaFeatureValue<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       MediaFeatureValue::Length(len) => len.to_css(dest),
       MediaFeatureValue::Number(num) => num.to_css(dest),

@@ -3,6 +3,8 @@
 //! A [StyleSheet](StyleSheet) represents a `.css` file or `<style>` element in HTML.
 //! A [StyleAttribute](StyleAttribute) represents an inline `style` attribute in HTML.
 
+#![deny(unsafe_code)]
+
 use crate::context::{DeclarationContext, PropertyHandlerContext};
 use crate::css_modules::{hash, CssModule, CssModuleExports, CssModuleReferences};
 use crate::declaration::{DeclarationBlock, DeclarationHandler};
@@ -38,7 +40,6 @@ pub use crate::printer::PseudoClasses;
 /// use rspack_lightningcss::stylesheet::{
 ///   StyleSheet, ParserOptions, MinifyOptions, PrinterOptions
 /// };
-///
 /// // Parse a style sheet from a string.
 /// let mut stylesheet = StyleSheet::parse(
 ///   r#"
@@ -300,7 +301,7 @@ where
 
     if let Some(config) = &self.options.css_modules {
       let mut references = CssModuleReferences::new();
-      printer.css_module = Some(CssModule::new(
+      printer.state.css_module = Some(CssModule::new(
         config,
         &self.sources,
         project_root,
@@ -312,9 +313,9 @@ where
       printer.newline()?;
 
       Ok(ToCssResult {
-        dependencies: printer.dependencies,
+        dependencies: printer.take_dependencies(),
         exports: Some(std::mem::take(
-          &mut printer.css_module.unwrap().exports_by_source_index[0],
+          &mut printer.state.css_module.unwrap().exports_by_source_index[0],
         )),
         code: dest,
         references: Some(references),
@@ -324,7 +325,7 @@ where
       printer.newline()?;
 
       Ok(ToCssResult {
-        dependencies: printer.dependencies,
+        dependencies: printer.take_dependencies(),
         code: dest,
         exports: None,
         references: None,
@@ -421,7 +422,7 @@ impl<'i> StyleAttribute<'i> {
     self.declarations.to_css(&mut printer)?;
 
     Ok(ToCssResult {
-      dependencies: printer.dependencies,
+      dependencies: printer.take_dependencies(),
       code: dest,
       exports: None,
       references: None,

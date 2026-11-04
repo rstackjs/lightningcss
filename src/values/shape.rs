@@ -5,14 +5,12 @@ use super::position::Position;
 use super::rect::Rect;
 use crate::error::{ParserError, PrinterError};
 use crate::macros::enum_property;
-use crate::printer::Printer;
 use crate::properties::border_radius::BorderRadius;
 use crate::traits::{Parse, ToCss};
 use crate::values::number::NonNegative;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 /// A CSS [`<basic-shape>`](https://www.w3.org/TR/css-shapes-1/#basic-shape-functions) value.
 #[derive(Debug, Clone, PartialEq)]
@@ -236,10 +234,7 @@ impl<'i> Parse<'i> for Point {
 }
 
 impl ToCss for BasicShape {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       BasicShape::Inset(rect) => {
         dest.write_str("inset(")?;
@@ -270,10 +265,7 @@ impl ToCss for BasicShape {
 }
 
 impl ToCss for InsetRect {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.rect.to_css(dest)?;
     if self.radius != BorderRadius::default() {
       dest.write_str(" round ")?;
@@ -284,10 +276,7 @@ impl ToCss for InsetRect {
 }
 
 impl ToCss for Circle {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     let mut has_output = false;
     if self.radius != ShapeRadius::default() {
       self.radius.to_css(dest)?;
@@ -307,10 +296,7 @@ impl ToCss for Circle {
 }
 
 impl ToCss for Ellipse {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     let mut has_output = false;
     if self.radius_x != ShapeRadius::default() || self.radius_y != ShapeRadius::default() {
       self.radius_x.to_css(dest)?;
@@ -332,10 +318,7 @@ impl ToCss for Ellipse {
 }
 
 impl ToCss for Polygon {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     if self.fill_rule != FillRule::default() {
       self.fill_rule.to_css(dest)?;
       dest.delim(',', false)?;
@@ -356,10 +339,7 @@ impl ToCss for Polygon {
 }
 
 impl ToCss for Point {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.x.to_css(dest)?;
     dest.write_char(' ')?;
     self.y.to_css(dest)

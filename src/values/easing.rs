@@ -1,13 +1,11 @@
 //! CSS easing functions.
 
 use crate::error::{ParserError, PrinterError};
-use crate::printer::Printer;
 use crate::traits::{Parse, ToCss};
 use crate::values::number::{CSSInteger, CSSNumber};
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 /// A CSS [easing function](https://www.w3.org/TR/css-easing-1/#easing-functions).
 #[derive(Debug, Clone, PartialEq)]
@@ -110,10 +108,7 @@ impl<'i> Parse<'i> for EasingFunction {
 }
 
 impl ToCss for EasingFunction {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       EasingFunction::Linear => dest.write_str("linear")?,
       EasingFunction::Ease => dest.write_str("ease")?,

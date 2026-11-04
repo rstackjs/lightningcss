@@ -3,7 +3,6 @@
 use super::Location;
 use crate::error::{ParserError, PrinterError};
 use crate::macros::enum_property;
-use crate::printer::Printer;
 use crate::properties::custom::CustomProperty;
 use crate::properties::font::{FontFamily, FontStretch, FontStyle as FontStyleProperty, FontWeight};
 use crate::stylesheet::ParserOptions;
@@ -15,7 +14,6 @@ use crate::values::url::Url;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 /// A [@font-face](https://drafts.csswg.org/css-fonts/#font-face-rule) rule.
 #[derive(Debug, PartialEq, Clone)]
@@ -101,10 +99,7 @@ impl<'i> Parse<'i> for Source<'i> {
 }
 
 impl<'i> ToCss for Source<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       Source::Url(url) => url.to_css(dest),
       Source::Local(local) => {
@@ -155,10 +150,7 @@ impl<'i> Parse<'i> for UrlSource<'i> {
 }
 
 impl<'i> ToCss for UrlSource<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.url.to_css(dest)?;
     if let Some(format) = &self.format {
       dest.whitespace()?;
@@ -228,10 +220,7 @@ impl<'i> Parse<'i> for FontFormat<'i> {
 }
 
 impl<'i> ToCss for FontFormat<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     use FontFormat::*;
     let s = match self {
       WOFF => "woff",
@@ -320,10 +309,7 @@ impl<'i> Parse<'i> for UnicodeRange {
 }
 
 impl ToCss for UnicodeRange {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     // Attempt to optimize the range to use question mark syntax.
     if self.start != self.end {
       // Find the first hex digit that differs between the start and end values.
@@ -421,10 +407,7 @@ impl<'i> Parse<'i> for FontStyle {
 }
 
 impl ToCss for FontStyle {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       FontStyle::Normal => {
         dest.write_str("normal")?;
@@ -517,10 +500,7 @@ impl<'i> RuleBodyItemParser<'i, FontFaceProperty<'i>, ParserError<'i>> for FontF
 }
 
 impl<'i> ToCss for FontFaceRule<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@font-face")?;
@@ -531,7 +511,7 @@ impl<'i> ToCss for FontFaceRule<'i> {
     for (i, prop) in self.properties.iter().enumerate() {
       dest.newline()?;
       prop.to_css(dest)?;
-      if i != len - 1 || !dest.minify {
+      if i != len - 1 || !dest.options().minify {
         dest.write_char(';')?;
       }
     }
@@ -543,10 +523,7 @@ impl<'i> ToCss for FontFaceRule<'i> {
 }
 
 impl<'i> ToCss for FontFaceProperty<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     use FontFaceProperty::*;
     macro_rules! property {
       ($prop: literal, $value: expr) => {{

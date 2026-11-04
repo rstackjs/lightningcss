@@ -4,12 +4,11 @@ use super::Location;
 use super::{CssRuleList, MinifyContext};
 use crate::error::{MinifyError, PrinterError};
 use crate::parser::DefaultAtRule;
-use crate::printer::Printer;
+use crate::printer::ContextAccess;
 use crate::selector::{is_pure_css_modules_selector, SelectorList};
 use crate::traits::ToCss;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
-use std::fmt::Write;
 
 /// A [@scope](https://drafts.csswg.org/css-cascade-6/#scope-atrule) rule.
 ///
@@ -65,10 +64,7 @@ impl<'i, T: Clone> ScopeRule<'i, T> {
 }
 
 impl<'i, T: ToCss> ToCss for ScopeRule<'i, T> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@scope")?;
@@ -80,14 +76,14 @@ impl<'i, T: ToCss> ToCss for ScopeRule<'i, T> {
       dest.whitespace()?;
     }
     if let Some(scope_end) = &self.scope_end {
-      if dest.minify {
+      if dest.options().minify {
         dest.write_char(' ')?;
       }
       dest.write_str("to (")?;
       // <scope-start> is treated as an ancestor of scope end.
       // https://drafts.csswg.org/css-nesting/#nesting-at-scope
       if let Some(scope_start) = &self.scope_start {
-        dest.with_context(scope_start, |dest| scope_end.to_css(dest))?;
+        dest.with_context(ContextAccess, scope_start, |dest| scope_end.to_css(dest))?;
       } else {
         scope_end.to_css(dest)?;
       }
@@ -100,7 +96,7 @@ impl<'i, T: ToCss> ToCss for ScopeRule<'i, T> {
     // Nested style rules within @scope are implicitly relative to the <scope-start>
     // so clear our style context while printing them to avoid replacing & ourselves.
     // https://drafts.csswg.org/css-cascade-6/#scoped-rules
-    dest.with_cleared_context(|dest| self.rules.to_css(dest))?;
+    dest.with_cleared_context(ContextAccess, |dest| self.rules.to_css(dest))?;
     dest.dedent();
     dest.newline()?;
     dest.write_char('}')?;
