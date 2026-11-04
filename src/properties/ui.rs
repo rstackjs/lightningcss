@@ -4,7 +4,6 @@ use crate::context::PropertyHandlerContext;
 use crate::declaration::{DeclarationBlock, DeclarationList};
 use crate::error::{ParserError, PrinterError};
 use crate::macros::{define_shorthand, enum_property, shorthand_property};
-use crate::printer::Printer;
 use crate::properties::{Property, PropertyId};
 use crate::targets::{should_compile, Browsers, Targets};
 use crate::traits::{FallbackValues, IsCompatible, Parse, PropertyHandler, Shorthand, ToCss};
@@ -17,7 +16,6 @@ use crate::visitor::Visit;
 use bitflags::bitflags;
 use cssparser::*;
 use smallvec::SmallVec;
-use std::fmt::Write;
 
 use super::custom::Token;
 use super::{CustomProperty, CustomPropertyName, TokenList, TokenOrValue};
@@ -71,10 +69,7 @@ impl<'i> Parse<'i> for CursorImage<'i> {
 }
 
 impl<'i> ToCss for CursorImage<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.url.to_css(dest)?;
 
     if let Some((x, y)) = self.hotspot {
@@ -166,10 +161,7 @@ impl<'i> Parse<'i> for Cursor<'i> {
 }
 
 impl<'i> ToCss for Cursor<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     for image in &self.images {
       image.to_css(dest)?;
       dest.delim(',', false)?;
@@ -368,10 +360,7 @@ impl<'i> Parse<'i> for Appearance<'i> {
 }
 
 impl<'i> ToCss for Appearance<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     dest.write_str(self.to_str())?;
     Ok(())
   }
@@ -477,10 +466,7 @@ impl<'i> Parse<'i> for ColorScheme {
 }
 
 impl ToCss for ColorScheme {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     if self.is_empty() {
       dest.write_str("normal")?;
       return Ok(());

@@ -2,13 +2,10 @@
 
 #![allow(non_upper_case_globals)]
 
-use std::fmt::Write;
-
 use crate::context::PropertyHandlerContext;
 use crate::declaration::{DeclarationBlock, DeclarationList};
 use crate::error::{Error, ErrorLocation, ParserError, PrinterError, PrinterErrorKind};
 use crate::macros::{define_shorthand, impl_shorthand};
-use crate::printer::Printer;
 use crate::properties::{Property, PropertyId};
 use crate::traits::{Parse, PropertyHandler, Shorthand, ToCss};
 use crate::values::ident::CustomIdent;
@@ -222,10 +219,7 @@ impl<'i> Parse<'i> for TrackSize {
 }
 
 impl ToCss for TrackSize {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       TrackSize::TrackBreadth(breadth) => breadth.to_css(dest),
       TrackSize::MinMax { min, max } => {
@@ -293,10 +287,7 @@ impl TrackBreadth {
 }
 
 impl ToCss for TrackBreadth {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       TrackBreadth::Auto => {
         dest.write_str("auto")?;
@@ -348,10 +339,7 @@ impl<'i> Parse<'i> for TrackRepeat<'i> {
 }
 
 impl<'i> ToCss for TrackRepeat<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     dest.write_str("repeat(")?;
     self.count.to_css(dest)?;
     dest.delim(',', false)?;
@@ -395,10 +383,10 @@ fn parse_line_names<'i, 't>(
   })
 }
 
-fn serialize_line_names<W>(names: &[CustomIdent], dest: &mut Printer<W>) -> Result<(), PrinterError>
-where
-  W: std::fmt::Write,
-{
+fn serialize_line_names<PrinterT: crate::printer::PrinterTrait>(
+  names: &[CustomIdent],
+  dest: &mut PrinterT,
+) -> Result<(), PrinterError> {
   dest.write_char('[')?;
   let mut first = true;
   for name in names {
@@ -413,28 +401,26 @@ where
   Ok(())
 }
 
-fn write_ident<W>(name: &str, dest: &mut Printer<W>) -> Result<(), PrinterError>
-where
-  W: std::fmt::Write,
-{
-  let css_module_grid_enabled = dest.css_module.as_ref().map_or(false, |css_module| css_module.config.grid);
-  if css_module_grid_enabled {
-    if let Some(css_module) = &mut dest.css_module {
-      if let Some(last) = css_module.config.pattern.segments.last() {
-        if !matches!(last, crate::css_modules::Segment::Local) {
-          return Err(Error {
-            kind: PrinterErrorKind::InvalidCssModulesPatternInGrid,
-            loc: Some(ErrorLocation {
-              filename: dest.filename().into(),
-              line: dest.loc.line,
-              column: dest.loc.column,
-            }),
-          });
-        }
+fn write_ident<PrinterT: crate::printer::PrinterTrait>(
+  name: &str,
+  dest: &mut PrinterT,
+) -> Result<(), PrinterError> {
+  let config = dest.css_module_config().filter(|config| config.grid);
+  if let Some(config) = config {
+    if let Some(last) = config.pattern.segments.last() {
+      if !matches!(last, crate::css_modules::Segment::Local) {
+        return Err(Error {
+          kind: PrinterErrorKind::InvalidCssModulesPatternInGrid,
+          loc: Some(ErrorLocation {
+            filename: dest.filename().into(),
+            line: dest.loc().line,
+            column: dest.loc().column,
+          }),
+        });
       }
     }
   }
-  dest.write_ident(name, css_module_grid_enabled)?;
+  dest.write_ident(name, config.is_some())?;
   Ok(())
 }
 
@@ -467,10 +453,7 @@ impl<'i> Parse<'i> for TrackList<'i> {
 }
 
 impl<'i> ToCss for TrackList<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     let mut items_iter = self.items.iter();
     let line_names_iter = self.line_names.iter();
     let mut first = true;
@@ -529,10 +512,7 @@ impl<'i> Parse<'i> for TrackSizeList {
 }
 
 impl ToCss for TrackSizeList {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     if self.0.len() == 0 {
       dest.write_str("auto")?;
       return Ok(());
@@ -644,10 +624,7 @@ fn is_name_code_point(c: char) -> bool {
 }
 
 impl ToCss for GridTemplateAreas {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       GridTemplateAreas::None => {
         dest.write_str("none")?;
@@ -658,7 +635,7 @@ impl ToCss for GridTemplateAreas {
         let mut next = iter.next();
         let mut first = true;
         while next.is_some() {
-          if !first && !dest.minify {
+          if !first && !dest.options().minify {
             dest.newline()?;
           }
 
@@ -666,14 +643,14 @@ impl ToCss for GridTemplateAreas {
 
           if first {
             first = false;
-            if !dest.minify {
+            if !dest.options().minify {
               // Indent by the width of "grid-template-areas: ", so the rows line up.
               dest.indent_by(21);
             }
           }
         }
 
-        if !dest.minify {
+        if !dest.options().minify {
           dest.dedent_by(21);
         }
 
@@ -684,15 +661,12 @@ impl ToCss for GridTemplateAreas {
 }
 
 impl GridTemplateAreas {
-  fn write_string<'a, W>(
+  fn write_string<'a, PrinterT: crate::printer::PrinterTrait>(
     &self,
-    dest: &mut Printer<W>,
+    dest: &mut PrinterT,
     iter: &mut std::slice::Iter<'a, Option<String>>,
     next: &mut Option<&'a Option<String>>,
-  ) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  ) -> Result<(), PrinterError> {
     let columns = match self {
       GridTemplateAreas::Areas { columns, .. } => *columns,
       _ => unreachable!(),
@@ -704,13 +678,13 @@ impl GridTemplateAreas {
     for i in 0..columns {
       if let Some(token) = next {
         if let Some(string) = token {
-          if i > 0 && (!last_was_null || !dest.minify) {
+          if i > 0 && (!last_was_null || !dest.options().minify) {
             dest.write_char(' ')?;
           }
           write_ident(string, dest)?;
           last_was_null = false;
         } else {
-          if i > 0 && (last_was_null || !dest.minify) {
+          if i > 0 && (last_was_null || !dest.options().minify) {
             dest.write_char(' ')?;
           }
           dest.write_char('.')?;
@@ -828,19 +802,17 @@ impl<'i> Parse<'i> for GridTemplate<'i> {
 }
 
 impl ToCss for GridTemplate<'_> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.to_css_with_indent(dest, 15)
   }
 }
 
 impl GridTemplate<'_> {
-  fn to_css_with_indent<W>(&self, dest: &mut Printer<W>, indent: u8) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css_with_indent<PrinterT: crate::printer::PrinterTrait>(
+    &self,
+    dest: &mut PrinterT,
+    indent: u8,
+  ) -> Result<(), PrinterError> {
     match &self.areas {
       GridTemplateAreas::None => {
         if self.rows == TrackSizing::None && self.columns == TrackSizing::None {
@@ -867,7 +839,7 @@ impl GridTemplate<'_> {
         while next.is_some() {
           macro_rules! newline {
             () => {
-              if !dest.minify {
+              if !dest.options().minify {
                 if !indented {
                   // Indent by the width of "grid-template: ", so the rows line up.
                   dest.indent_by(indent);
@@ -880,7 +852,7 @@ impl GridTemplate<'_> {
 
           if let Some(line_names) = line_names_iter.next() {
             if !line_names.is_empty() {
-              if !dest.minify && line_names.len() == 2 {
+              if !dest.options().minify && line_names.len() == 2 {
                 dest.whitespace()?;
                 serialize_line_names(&line_names[0..1], dest)?;
                 newline!();
@@ -1104,16 +1076,13 @@ impl<'i> Parse<'i> for GridAutoFlow {
 }
 
 impl ToCss for GridAutoFlow {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     let s = if *self == GridAutoFlow::Row {
       "row"
     } else if *self == GridAutoFlow::Column {
       "column"
     } else if *self == GridAutoFlow::Row | GridAutoFlow::Dense {
-      if dest.minify {
+      if dest.options().minify {
         "dense"
       } else {
         "row dense"
@@ -1224,10 +1193,7 @@ fn parse_grid_auto_flow<'i, 't>(
 }
 
 impl ToCss for Grid<'_> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     let is_auto_initial = self.auto_rows == TrackSizeList::default()
       && self.auto_columns == TrackSizeList::default()
       && self.auto_flow == GridAutoFlow::default();
@@ -1455,10 +1421,7 @@ impl<'i> Parse<'i> for GridLine<'i> {
 }
 
 impl ToCss for GridLine<'_> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       GridLine::Auto => {
         dest.write_str("auto")?;
@@ -1527,10 +1490,7 @@ macro_rules! impl_grid_placement {
     }
 
     impl ToCss for $name<'_> {
-      fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-      where
-        W: std::fmt::Write,
-      {
+      fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
         self.start.to_css(dest)?;
 
         if !self.start.can_omit_end(&self.end) {
@@ -1636,10 +1596,7 @@ impl<'i> Parse<'i> for GridArea<'i> {
 }
 
 impl ToCss for GridArea<'_> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.row_start.to_css(dest)?;
 
     let can_omit_column_end = self.column_start.can_omit_end(&self.column_end);

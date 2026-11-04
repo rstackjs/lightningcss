@@ -36,8 +36,6 @@
 
 #![deny(missing_docs)]
 
-use std::fmt::Write;
-
 pub mod container;
 pub mod counter_style;
 pub mod custom_media;
@@ -102,6 +100,7 @@ use scope::ScopeRule;
 use smallvec::{smallvec, SmallVec};
 use starting_style::StartingStyleRule;
 use std::collections::{HashMap, HashSet};
+use std::fmt::Write;
 use std::hash::{BuildHasherDefault, Hasher};
 use style::StyleRule;
 use supports::SupportsRule;
@@ -382,10 +381,7 @@ impl<'i, 'de: 'i, R: serde::Deserialize<'de>> serde::Deserialize<'de> for CssRul
 }
 
 impl<'a, 'i, T: ToCss> ToCss for CssRule<'i, T> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       CssRule::Media(media) => media.to_css(dest),
       CssRule::Import(import) => import.to_css(dest),
@@ -1322,10 +1318,7 @@ fn merge_style_rules<'i, T>(
 }
 
 impl<'a, 'i, T: ToCss> ToCss for CssRuleList<'i, T> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     let mut first = true;
     let mut last_without_block = false;
 
@@ -1336,15 +1329,10 @@ impl<'a, 'i, T: ToCss> ToCss for CssRuleList<'i, T> {
 
       // Skip @import rules if collecting dependencies.
       if let CssRule::Import(rule) = &rule {
-        if dest.remove_imports {
-          let dep = if dest.dependencies.is_some() {
-            Some(Dependency::Import(ImportDependency::new(&rule, dest.filename())))
-          } else {
-            None
-          };
-
-          if let Some(dependencies) = &mut dest.dependencies {
-            dependencies.push(dep.unwrap());
+        if dest.remove_imports() {
+          if dest.has_dependencies() {
+            let dep = ImportDependency::new(&rule, dest.filename());
+            dest.add_dependency(Dependency::Import(dep));
             continue;
           }
         }
@@ -1353,7 +1341,7 @@ impl<'a, 'i, T: ToCss> ToCss for CssRuleList<'i, T> {
       if first {
         first = false;
       } else {
-        if !dest.minify
+        if !dest.options().minify
           && !(last_without_block
             && matches!(
               rule,
@@ -1367,8 +1355,8 @@ impl<'a, 'i, T: ToCss> ToCss for CssRuleList<'i, T> {
       rule.to_css(dest)?;
 
       // If this is an invisible nested declarations rule, and not the last rule in the block, add a semicolon.
-      if dest.minify
-        && !should_compile!(dest.targets.current, Nesting)
+      if dest.options().minify
+        && !should_compile!(dest.targets().current, Nesting)
         && matches!(rule, CssRule::NestedDeclarations(_))
         && i != self.0.len() - 1
       {

@@ -2,7 +2,6 @@
 
 use crate::error::{ParserError, PrinterError};
 use crate::macros::enum_property;
-use crate::printer::Printer;
 use crate::targets::{Browsers, Targets};
 use crate::traits::{FallbackValues, IsCompatible, Parse, ToCss, Zero};
 use crate::values::color::ColorFallbackKind;
@@ -12,7 +11,6 @@ use crate::values::{angle::Angle, color::CssColor, length::Length, percentage::N
 use crate::visitor::Visit;
 use cssparser::*;
 use smallvec::SmallVec;
-use std::fmt::Write;
 
 /// A [filter](https://drafts.fxtf.org/filter-effects-1/#filter-functions) function.
 #[derive(Debug, Clone, PartialEq)]
@@ -118,10 +116,7 @@ impl<'i> Parse<'i> for Filter<'i> {
 }
 
 impl<'i> ToCss for Filter<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       Filter::Blur(val) => {
         dest.write_str("blur(")?;
@@ -290,10 +285,7 @@ impl<'i> Parse<'i> for DropShadow {
 }
 
 impl ToCss for DropShadow {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.x_offset.to_css(dest)?;
     dest.write_char(' ')?;
     self.y_offset.to_css(dest)?;
@@ -356,10 +348,7 @@ impl<'i> Parse<'i> for FilterList<'i> {
 }
 
 impl<'i> ToCss for FilterList<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       FilterList::None => {
         dest.write_str("none")?;

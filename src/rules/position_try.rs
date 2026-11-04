@@ -3,12 +3,10 @@
 use super::Location;
 use crate::declaration::DeclarationBlock;
 use crate::error::PrinterError;
-use crate::printer::Printer;
 use crate::traits::ToCss;
 use crate::values::ident::DashedIdent;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
-use std::fmt::Write;
 
 /// A [@position-try](https://drafts.csswg.org/css-anchor-position-1/#position-try) rule.
 #[derive(Debug, PartialEq, Clone)]
@@ -28,10 +26,7 @@ pub struct PositionTryRule<'i> {
 }
 
 impl<'i> ToCss for PositionTryRule<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@position-try ")?;

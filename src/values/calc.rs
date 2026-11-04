@@ -3,14 +3,12 @@
 use crate::compat::Feature;
 use crate::error::{ParserError, PrinterError};
 use crate::macros::enum_property;
-use crate::printer::Printer;
 use crate::targets::{should_compile, Browsers};
 use crate::traits::private::AddInternal;
 use crate::traits::{IsCompatible, Parse, Sign, ToCss, TryMap, TryOp, TrySign};
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 use super::angle::Angle;
 use super::length::Length;
@@ -124,10 +122,7 @@ fn modulo(a: f32, b: f32) -> f32 {
 }
 
 impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Debug> ToCss for MathFunction<V> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       MathFunction::Calc(calc) => {
         dest.write_str("calc(")?;
@@ -165,7 +160,7 @@ impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Deb
       }
       MathFunction::Clamp(a, b, c) => {
         // If clamp() is unsupported by targets, output min()/max()
-        if should_compile!(dest.targets.current, ClampFunction) {
+        if should_compile!(dest.targets().current, ClampFunction) {
           dest.write_str("max(")?;
           a.to_css(dest)?;
           dest.delim(',', false)?;
@@ -969,13 +964,9 @@ impl<V: AddInternal + std::convert::Into<Calc<V>> + std::convert::TryFrom<Calc<V
 }
 
 impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Debug> ToCss for Calc<V> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
-    let was_in_calc = dest.in_calc;
-    dest.in_calc = true;
-
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
+    let old_in_calc = dest.in_calc();
+    dest.set_in_calc(true);
     let res = match self {
       Calc::Value(v) => v.to_css(dest),
       Calc::Number(n) => n.to_css(dest),
@@ -1006,8 +997,7 @@ impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Deb
       }
       Calc::Function(f) => f.to_css(dest),
     };
-
-    dest.in_calc = was_in_calc;
+    dest.set_in_calc(old_in_calc);
     res
   }
 }

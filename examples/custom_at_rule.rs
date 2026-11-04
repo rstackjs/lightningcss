@@ -1,10 +1,10 @@
-use std::{collections::HashMap, convert::Infallible, fmt::Write};
+use std::{collections::HashMap, convert::Infallible};
 
 use cssparser::*;
 use rspack_lightningcss::{
   declaration::DeclarationBlock,
   error::PrinterError,
-  printer::Printer,
+  printer::PrinterTrait,
   properties::custom::{Token, TokenOrValue},
   rules::{style::StyleRule, CssRule, CssRuleList, Location},
   selector::{Component, Selector},
@@ -285,7 +285,7 @@ impl<'i, V: Visitor<'i, AtRule>> Visit<'i, AtRule, V> for AtRule {
 }
 
 impl ToCss for AtRule {
-  fn to_css<W: std::fmt::Write>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError> {
+  fn to_css<PrinterT: PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       AtRule::Tailwind(rule) => {
         let _ = rule.loc; // TODO: source maps

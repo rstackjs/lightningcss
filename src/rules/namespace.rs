@@ -2,13 +2,11 @@
 
 use super::Location;
 use crate::error::PrinterError;
-use crate::printer::Printer;
 use crate::traits::ToCss;
 use crate::values::ident::Ident;
 use crate::values::string::CSSString;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
-use std::fmt::Write;
 
 /// A [@namespace](https://drafts.csswg.org/css-namespaces/#declaration) rule.
 #[derive(Debug, PartialEq, Clone)]
@@ -31,10 +29,7 @@ pub struct NamespaceRule<'i> {
 }
 
 impl<'i> ToCss for NamespaceRule<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@namespace ")?;

@@ -6,13 +6,11 @@ use super::Location;
 use crate::dependencies::{Dependency, ImportDependency};
 use crate::error::PrinterError;
 use crate::media_query::MediaList;
-use crate::printer::Printer;
 use crate::traits::ToCss;
 use crate::values::string::CowArcStr;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 /// A [@import](https://drafts.csswg.org/css-cascade/#at-import) rule.
 #[derive(Debug, PartialEq, Clone)]
@@ -39,25 +37,19 @@ pub struct ImportRule<'i> {
 }
 
 impl<'i> ToCss for ImportRule<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
-    let dep = if dest.dependencies.is_some() {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
+    let dep = if dest.has_dependencies() {
       Some(ImportDependency::new(self, dest.filename()))
     } else {
       None
     };
-
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@import ")?;
     if let Some(dep) = dep {
       serialize_string(&dep.placeholder, dest)?;
 
-      if let Some(dependencies) = &mut dest.dependencies {
-        dependencies.push(Dependency::Import(dep))
-      }
+      dest.add_dependency(Dependency::Import(dep));
     } else {
       serialize_string(&self.url, dest)?;
     }

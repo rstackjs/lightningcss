@@ -3,7 +3,7 @@
 use crate::compat::Feature;
 use crate::error::{ParserError, PrinterError, SelectorError};
 use crate::parser::ParserFlags;
-use crate::printer::Printer;
+use crate::printer::{ContextAccess, Printer};
 use crate::properties::custom::TokenList;
 use crate::rules::StyleContext;
 use crate::stylesheet::{ParserOptions, PrinterOptions};
@@ -24,7 +24,6 @@ use rspack_lightningcss_selectors::{
 use smallvec::SmallVec;
 use std::collections::HashSet;
 use std::fmt;
-use std::fmt::Write;
 
 #[cfg(feature = "serde")]
 use crate::serialization::*;
@@ -692,20 +691,17 @@ impl<'i> cssparser::ToCss for PseudoClass<'i> {
     W: fmt::Write,
   {
     let mut s = String::new();
-    serialize_pseudo_class(self, &mut Printer::new(&mut s, Default::default()), None)
-      .map_err(|_| std::fmt::Error)?;
+    let mut printer = Printer::new(&mut s, PrinterOptions::default());
+    serialize_pseudo_class(self, &mut printer, None).map_err(|_| std::fmt::Error)?;
     write!(dest, "{}", s)
   }
 }
 
-fn serialize_pseudo_class<'a, 'i, W>(
+fn serialize_pseudo_class<'a, 'i, PrinterT: crate::printer::PrinterTrait>(
   pseudo_class: &PseudoClass<'i>,
-  dest: &mut Printer<W>,
+  dest: &mut PrinterT,
   context: Option<&StyleContext>,
-) -> Result<(), PrinterError>
-where
-  W: fmt::Write,
-{
+) -> Result<(), PrinterError> {
   use PseudoClass::*;
   match pseudo_class {
     Lang { languages: lang } => {
@@ -741,8 +737,8 @@ where
     ($prefix: ident, $val: expr) => {{
       dest.write_char(':')?;
       // If the printer has a vendor prefix override, use that.
-      let vp = if !dest.vendor_prefix.is_empty() {
-        (dest.vendor_prefix & *$prefix).or_none()
+      let vp = if !dest.vendor_prefix().is_empty() {
+        (dest.vendor_prefix() & *$prefix).or_none()
       } else {
         *$prefix
       };
@@ -754,19 +750,18 @@ where
 
   macro_rules! pseudo {
     ($key: ident, $s: literal) => {{
-      let class = if let Some(pseudo_classes) = &dest.pseudo_classes {
-        pseudo_classes.$key
-      } else {
-        None
-      };
-
-      if let Some(class) = class {
-        dest.write_char('.')?;
-        dest.write_ident(class, true)
-      } else {
-        dest.write_str($s)?;
-        Ok(())
-      }
+      dest.with_pseudo_class(
+        |pseudo_classes| pseudo_classes.$key,
+        |dest, class| {
+          if let Some(class) = class {
+            dest.write_char('.')?;
+            dest.write_ident(class, true)
+          } else {
+            dest.write_str($s)?;
+            Ok(())
+          }
+        },
+      )
     }};
   }
 
@@ -825,8 +820,8 @@ where
     // https://fullscreen.spec.whatwg.org/#:fullscreen-pseudo-class
     Fullscreen(prefix) => {
       dest.write_char(':')?;
-      let vp = if !dest.vendor_prefix.is_empty() {
-        (dest.vendor_prefix & *prefix).or_none()
+      let vp = if !dest.vendor_prefix().is_empty() {
+        (dest.vendor_prefix() & *prefix).or_none()
       } else {
         *prefix
       };
@@ -984,12 +979,7 @@ where
     }
 
     Local { selector } => serialize_selector(selector, dest, context, false),
-    Global { selector } => {
-      let css_module = std::mem::take(&mut dest.css_module);
-      serialize_selector(selector, dest, context, false)?;
-      dest.css_module = css_module;
-      Ok(())
-    }
+    Global { selector } => dest.without_css_module(|dest| serialize_selector(selector, dest, context, false)),
 
     // https://webkit.org/blog/363/styling-scrollbars/
     WebKitScrollbar(s) => {
@@ -1250,10 +1240,7 @@ impl<'i> Parse<'i> for ViewTransitionPartName<'i> {
 }
 
 impl<'i> ToCss for ViewTransitionPartName<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       ViewTransitionPartName::All => {
         dest.write_char('*')?;
@@ -1302,10 +1289,7 @@ impl<'i> Parse<'i> for ViewTransitionPartSelector<'i> {
 }
 
 impl<'i> ToCss for ViewTransitionPartSelector<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     if let Some(name) = &self.name {
       name.to_css(dest)?;
     }
@@ -1323,28 +1307,25 @@ impl<'i> cssparser::ToCss for PseudoElement<'i> {
     W: fmt::Write,
   {
     let mut s = String::new();
-    serialize_pseudo_element(self, &mut Printer::new(&mut s, Default::default()), None)
-      .map_err(|_| std::fmt::Error)?;
+    let mut printer = Printer::new(&mut s, PrinterOptions::default());
+    serialize_pseudo_element(self, &mut printer, None).map_err(|_| std::fmt::Error)?;
     write!(dest, "{}", s)
   }
 }
 
-fn serialize_pseudo_element<'a, 'i, W>(
+fn serialize_pseudo_element<'a, 'i, PrinterT: crate::printer::PrinterTrait>(
   pseudo_element: &PseudoElement,
-  dest: &mut Printer<W>,
+  dest: &mut PrinterT,
   context: Option<&StyleContext>,
-) -> Result<(), PrinterError>
-where
-  W: fmt::Write,
-{
+) -> Result<(), PrinterError> {
   use PseudoElement::*;
 
   macro_rules! write_prefix {
     ($prefix: ident) => {{
       dest.write_str("::")?;
       // If the printer has a vendor prefix override, use that.
-      let vp = if !dest.vendor_prefix.is_empty() {
-        (dest.vendor_prefix & *$prefix).or_none()
+      let vp = if !dest.vendor_prefix().is_empty() {
+        (dest.vendor_prefix() & *$prefix).or_none()
       } else {
         *$prefix
       };
@@ -1608,19 +1589,15 @@ impl<'i> PseudoElement<'i> {
 }
 
 impl<'a, 'i> ToCss for SelectorList<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: fmt::Write,
-  {
-    serialize_selector_list(self.0.iter(), dest, dest.context(), false)
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
+    dest.with_current_context(ContextAccess, |dest, context| {
+      serialize_selector_list(self.0.iter(), dest, context, false)
+    })
   }
 }
 
 impl ToCss for Combinator {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match *self {
       Combinator::Child => dest.delim('>', true),
       Combinator::Descendant => {
@@ -1645,23 +1622,19 @@ impl ToCss for Combinator {
 
 // Copied from the selectors crate and modified to override to_css implementation.
 impl<'a, 'i> ToCss for Selector<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: fmt::Write,
-  {
-    serialize_selector(self, dest, dest.context(), false)
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
+    dest.with_current_context(ContextAccess, |dest, context| {
+      serialize_selector(self, dest, context, false)
+    })
   }
 }
 
-fn serialize_selector<'a, 'i, W>(
+fn serialize_selector<'a, 'i, PrinterT: crate::printer::PrinterTrait>(
   selector: &Selector<'i>,
-  dest: &mut Printer<W>,
+  dest: &mut PrinterT,
   context: Option<&StyleContext>,
   mut is_relative: bool,
-) -> Result<(), PrinterError>
-where
-  W: fmt::Write,
-{
+) -> Result<(), PrinterError> {
   use rspack_lightningcss_selectors::parser::*;
   // Compound selectors invert the order of their contents, so we need to
   // undo that during serialization.
@@ -1677,7 +1650,7 @@ where
 
   let mut combinators = selector.iter_raw_match_order().rev().filter_map(|x| x.as_combinator());
   let compound_selectors = selector.iter_raw_match_order().as_slice().split(|x| x.is_combinator()).rev();
-  let should_compile_nesting = should_compile!(dest.targets.current, Nesting);
+  let should_compile_nesting = should_compile!(dest.targets().current, Nesting);
 
   let mut first = true;
   let mut combinators_exhausted = false;
@@ -1821,14 +1794,11 @@ where
   Ok(())
 }
 
-fn serialize_component<'a, 'i, W>(
+fn serialize_component<'a, 'i, PrinterT: crate::printer::PrinterTrait>(
   component: &Component,
-  dest: &mut Printer<W>,
+  dest: &mut PrinterT,
   context: Option<&StyleContext>,
-) -> Result<(), PrinterError>
-where
-  W: fmt::Write,
-{
+) -> Result<(), PrinterError> {
   match component {
     Component::Combinator(ref c) => c.to_css(dest),
     Component::AttributeInNoNamespace {
@@ -1842,7 +1812,7 @@ where
       cssparser::ToCss::to_css(local_name, dest)?;
       cssparser::ToCss::to_css(operator, dest)?;
 
-      if dest.minify {
+      if dest.options().minify {
         // Serialize as both an identifier and a string and choose the shorter one.
         let mut id = String::new();
         serialize_identifier(&value, &mut id)?;
@@ -1880,7 +1850,7 @@ where
             return Ok(());
           }
 
-          let vp = dest.vendor_prefix;
+          let vp = dest.vendor_prefix();
           if vp.intersects(VendorPrefix::WebKit | VendorPrefix::Moz) {
             dest.write_char(':')?;
             vp.to_css(dest)?;
@@ -1893,7 +1863,7 @@ where
           dest.write_str(":not(")?;
         }
         Component::Any(prefix, ..) => {
-          let vp = dest.vendor_prefix.or(prefix);
+          let vp = dest.vendor_prefix().or(prefix);
           if vp.intersects(VendorPrefix::WebKit | VendorPrefix::Moz) {
             dest.write_char(':')?;
             vp.to_css(dest)?;
@@ -1967,14 +1937,11 @@ fn should_unwrap_is<'i>(selectors: &Box<[Selector<'i>]>) -> bool {
   false
 }
 
-fn serialize_nesting<W>(
-  dest: &mut Printer<W>,
+fn serialize_nesting<PrinterT: crate::printer::PrinterTrait>(
+  dest: &mut PrinterT,
   context: Option<&StyleContext>,
   first: bool,
-) -> Result<(), PrinterError>
-where
-  W: fmt::Write,
-{
+) -> Result<(), PrinterError> {
   if let Some(ctx) = context {
     // If there's only one simple selector, just serialize it directly.
     // Otherwise, use an :is() pseudo class.
@@ -1993,7 +1960,7 @@ where
   } else {
     // If there is no context, we are at the root if nesting is supported. This is equivalent to :scope.
     // Otherwise, if nesting is supported, serialize the nesting selector directly.
-    if should_compile!(dest.targets.current, Nesting) {
+    if should_compile!(dest.targets().current, Nesting) {
       dest.write_str(":scope")?;
       Ok(())
     } else {
@@ -2043,15 +2010,14 @@ fn is_namespace(component: Option<&Component>) -> bool {
   )
 }
 
-fn serialize_selector_list<'a, 'i: 'a, I, W>(
+fn serialize_selector_list<'a, 'i: 'a, I, PrinterT: crate::printer::PrinterTrait>(
   iter: I,
-  dest: &mut Printer<W>,
+  dest: &mut PrinterT,
   context: Option<&StyleContext>,
   is_relative: bool,
 ) -> Result<(), PrinterError>
 where
   I: Iterator<Item = &'a Selector<'i>>,
-  W: fmt::Write,
 {
   let mut first = true;
   for selector in iter {

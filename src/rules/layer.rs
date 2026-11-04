@@ -3,14 +3,12 @@
 use super::{CssRuleList, Location, MinifyContext};
 use crate::error::{MinifyError, ParserError, PrinterError};
 use crate::parser::DefaultAtRule;
-use crate::printer::Printer;
 use crate::traits::{Parse, ToCss};
 use crate::values::string::CowArcStr;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
 use smallvec::SmallVec;
-use std::fmt::Write;
 
 /// A [`<layer-name>`](https://drafts.csswg.org/css-cascade-5/#typedef-layer-name) within
 /// a `@layer` or `@import` rule.
@@ -62,10 +60,7 @@ impl<'i> Parse<'i> for LayerName<'i> {
 }
 
 impl<'i> ToCss for LayerName<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     let mut first = true;
     for name in &self.0 {
       if first {
@@ -100,10 +95,7 @@ pub struct LayerStatementRule<'i> {
 }
 
 impl<'i> ToCss for LayerStatementRule<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@layer ")?;
@@ -144,10 +136,7 @@ impl<'i, T: Clone> LayerBlockRule<'i, T> {
 }
 
 impl<'a, 'i, T: ToCss> ToCss for LayerBlockRule<'i, T> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@layer")?;
