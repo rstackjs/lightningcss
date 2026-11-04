@@ -56,6 +56,8 @@ mod tests {
   use crate::dependencies::Dependency;
   use crate::error::{Error, ErrorLocation, MinifyErrorKind, ParserError, PrinterErrorKind, SelectorError};
   use crate::parser::ParserFlags;
+  #[cfg(feature = "custom_sourcemap")]
+  use crate::printer::{OriginalLocation, SourceMap};
   use crate::properties::custom::Token;
   use crate::properties::Property;
   use crate::rules::CssRule;
@@ -32661,7 +32663,7 @@ b\0 c');
   }
 
   #[test]
-  #[cfg(feature = "custom_sourcemap")]
+  #[cfg(feature = "sourcemap")]
   fn test_url_quoting_source_map() {
     let stylesheet = StyleSheet::parse(
       r#"
@@ -32679,8 +32681,7 @@ b\0 c');
     let result = stylesheet
       .to_css(PrinterOptions {
         minify: true,
-        source_map: Some(&mut sm),
-        ..Default::default()
+        ..PrinterOptions::default().with_source_map(&mut sm)
       })
       .unwrap();
     let column = result.code.find(".bar").unwrap() as u32;
@@ -32698,8 +32699,157 @@ b\0 c');
     minify_test(".foo { z-index: -9999999 }", ".foo{z-index:-9999999}");
   }
 
+  #[cfg(feature = "custom_sourcemap")]
+  #[derive(Default)]
+  struct TestSourceMap {
+    sources: Vec<String>,
+    names: Vec<String>,
+    sources_content: Vec<(u32, String)>,
+    mappings: Vec<(u32, u32, Option<OriginalLocation>)>,
+  }
+
+  #[cfg(feature = "custom_sourcemap")]
+  impl SourceMap for TestSourceMap {
+    fn add_source(&mut self, source: &str) -> u32 {
+      if let Some(index) = self.sources.iter().position(|s| s == source) {
+        index as u32
+      } else {
+        self.sources.push(source.to_owned());
+        (self.sources.len() - 1) as u32
+      }
+    }
+
+    fn add_name(&mut self, name: &str) -> u32 {
+      if let Some(index) = self.names.iter().position(|s| s == name) {
+        index as u32
+      } else {
+        self.names.push(name.to_owned());
+        (self.names.len() - 1) as u32
+      }
+    }
+
+    fn set_source_content(&mut self, source_index: u32, source_content: &str) {
+      self.sources_content.push((source_index, source_content.to_owned()));
+    }
+
+    fn add_mapping(&mut self, generated_line: u32, generated_column: u32, original: Option<OriginalLocation>) {
+      self.mappings.push((generated_line, generated_column, original));
+    }
+
+    fn from_data_url(_source_root: &str, _data_url: &str) -> Option<Self> {
+      None
+    }
+
+    fn find_closest_mapping(&mut self, line: u32, column: u32) -> Option<OriginalLocation> {
+      self
+        .mappings
+        .iter()
+        .rev()
+        .find(|(generated_line, generated_column, _)| (*generated_line, *generated_column) <= (line, column))
+        .and_then(|(_, _, original)| *original)
+    }
+
+    fn get_source(&self, source_index: u32) -> Option<&str> {
+      self.sources.get(source_index as usize).map(String::as_str)
+    }
+
+    fn get_name(&self, name_index: u32) -> Option<&str> {
+      self.names.get(name_index as usize).map(String::as_str)
+    }
+
+    fn get_source_content(&self, source_index: u32) -> Option<&str> {
+      self
+        .sources_content
+        .iter()
+        .find(|(index, _)| *index == source_index)
+        .map(|(_, content)| content.as_str())
+    }
+  }
+
   #[test]
   #[cfg(feature = "custom_sourcemap")]
+  fn test_custom_source_map_remapped_content() {
+    use crate::printer::Printer;
+
+    for content in [None, Some(""), Some(".original { color: red }")] {
+      let original = OriginalLocation {
+        original_line: 10,
+        original_column: 5,
+        source: 0,
+        name: Some(0),
+      };
+      let input_map = || TestSourceMap {
+        sources: vec!["original.scss".into()],
+        names: vec!["original".into()],
+        sources_content: content.map(|content| vec![(0, content.into())]).unwrap_or_default(),
+        mappings: vec![(0, 0, Some(original))],
+      };
+      let mut output = TestSourceMap::default();
+      // Ensure the cache uses output indices, which may differ from input indices.
+      output.add_source("existing.css");
+      let mut css = String::new();
+      let mut printer = Printer::new(&mut css, PrinterOptions::default().with_source_map(&mut output));
+      printer.source_maps = vec![Some(input_map()), Some(input_map())];
+      for source_index in [0, 1] {
+        for line in 0..100 {
+          printer.add_mapping(Location {
+            source_index,
+            line,
+            column: 1,
+          });
+        }
+      }
+      drop(printer);
+
+      assert_eq!(output.sources, vec!["existing.css", "original.scss"]);
+      assert_eq!(output.names, vec!["original"]);
+      assert_eq!(
+        output.sources_content,
+        content.map(|content| vec![(1, content.into())]).unwrap_or_default()
+      );
+      assert_eq!(output.mappings.len(), 200);
+      assert!(output
+        .mappings
+        .iter()
+        .all(|(_, _, location)| *location == Some(OriginalLocation { source: 1, ..original })));
+    }
+  }
+
+  #[test]
+  #[cfg(feature = "custom_sourcemap")]
+  fn test_custom_source_map() {
+    let mut stylesheet = StyleSheet::parse(".foo { color: red }", ParserOptions::default()).unwrap();
+    stylesheet.minify(MinifyOptions::default()).unwrap();
+
+    let mut source_map = TestSourceMap::default();
+    let result = stylesheet
+      .to_css(
+        PrinterOptions {
+          minify: true,
+          ..PrinterOptions::default()
+        }
+        .with_source_map(&mut source_map),
+      )
+      .unwrap();
+
+    assert_eq!(result.code, ".foo{color:red}");
+    assert_eq!(
+      source_map.mappings.first(),
+      Some(&(
+        0,
+        0,
+        Some(OriginalLocation {
+          original_line: 0,
+          original_column: 0,
+          source: 0,
+          name: None,
+        })
+      ))
+    );
+  }
+
+  #[test]
+  #[cfg(feature = "sourcemap")]
   fn test_input_source_map() {
     let source = r#".imported {
       content: "yay, file support!";
@@ -32721,9 +32871,8 @@ b\0 c');
     let mut sm = parcel_sourcemap::SourceMap::new("/");
     stylesheet
       .to_css(PrinterOptions {
-        source_map: Some(&mut sm),
         minify: true,
-        ..PrinterOptions::default()
+        ..PrinterOptions::default().with_source_map(&mut sm)
       })
       .unwrap();
     let map = sm.to_json(None).unwrap();
@@ -32734,7 +32883,7 @@ b\0 c');
   }
 
   #[test]
-  #[cfg(feature = "custom_sourcemap")]
+  #[cfg(feature = "sourcemap")]
   fn test_source_maps_with_license_comments() {
     let source = r#"/*! a single line comment */
     /*!
@@ -32767,9 +32916,8 @@ b\0 c');
     stylesheet.minify(MinifyOptions::default()).unwrap();
     stylesheet
       .to_css(PrinterOptions {
-        source_map: Some(&mut sm),
         minify: true,
-        ..PrinterOptions::default()
+        ..PrinterOptions::default().with_source_map(&mut sm)
       })
       .unwrap();
     let map = sm.to_json(None).unwrap();

@@ -1531,6 +1531,7 @@ dependencies = [
  "rspack-lightningcss-derive",
  "rspack-lightningcss-selectors",
  "rspack-lightningcss-static-self",
+ "rustc-hash",
  "schemars",
  "serde",
  "serde-content",

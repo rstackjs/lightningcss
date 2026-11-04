@@ -1,4 +1,5 @@
 use codspeed_criterion_compat::black_box;
+use parcel_sourcemap::SourceMap;
 use rspack_lightningcss::stylesheet::{MinifyOptions, ParserOptions, PrinterOptions, StyleSheet};
 use std::fmt::Write;
 
@@ -43,6 +44,29 @@ pub fn transform_stylesheet(css: &str) {
     })
     .unwrap();
   black_box(result);
+}
+
+pub fn transform_stylesheet_with_source_map(css: &str) {
+  let mut source_map = SourceMap::new("/");
+  let source_index = source_map.add_source("bench.css");
+  source_map.set_source_content(source_index as usize, css).unwrap();
+
+  let mut stylesheet = StyleSheet::parse(
+    css,
+    ParserOptions {
+      source_index,
+      ..ParserOptions::default()
+    },
+  )
+  .unwrap();
+  stylesheet.minify(MinifyOptions::default()).unwrap();
+  let result = stylesheet
+    .to_css(PrinterOptions {
+      minify: true,
+      ..PrinterOptions::default().with_source_map(&mut source_map)
+    })
+    .unwrap();
+  black_box((result, source_map));
 }
 
 fn small_fixture() -> String {

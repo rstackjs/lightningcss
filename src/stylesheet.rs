@@ -12,6 +12,8 @@ use crate::dependencies::Dependency;
 use crate::error::{Error, ErrorLocation, MinifyErrorKind, ParserError, PrinterError, PrinterErrorKind};
 use crate::parser::{DefaultAtRule, DefaultAtRuleParser, TopLevelRuleParser};
 use crate::printer::Printer;
+#[cfg(feature = "custom_sourcemap")]
+use crate::printer::SourceMap;
 use crate::rules::{CssRule, CssRuleList, MinifyContext};
 use crate::targets::{should_compile, Targets, TargetsWithSupportsScope};
 use crate::traits::{AtRuleParser, ToCss};
@@ -19,8 +21,6 @@ use crate::values::string::CowArcStr;
 #[cfg(feature = "visitor")]
 use crate::visitor::{Visit, VisitTypes, Visitor};
 use cssparser::{Parser, ParserInput, StyleSheetParser};
-#[cfg(feature = "custom_sourcemap")]
-use parcel_sourcemap::SourceMap;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
@@ -226,9 +226,8 @@ where
 
   /// Returns the inline source map associated with the source at the given index.
   #[cfg(feature = "custom_sourcemap")]
-  #[cfg_attr(docsrs, doc(cfg(feature = "custom_sourcemap")))]
-  pub fn source_map(&self, source_index: usize) -> Option<SourceMap> {
-    SourceMap::from_data_url("/", self.source_map_url(source_index)?).ok()
+  pub fn source_map<S: SourceMap>(&self, source_index: usize) -> Option<S> {
+    S::from_data_url("/", self.source_map_url(source_index)?)
   }
 
   /// Minify and transform the style sheet for the provided browser targets.
@@ -276,20 +275,20 @@ where
   }
 
   /// Serialize the style sheet to a CSS string.
-  pub fn to_css(&self, options: PrinterOptions) -> Result<ToCssResult, Error<PrinterErrorKind>> {
+  pub fn to_css<'a, #[cfg(feature = "custom_sourcemap")] S: SourceMap>(
+    &self,
+    #[cfg(feature = "custom_sourcemap")] options: PrinterOptions<'a, S>,
+    #[cfg(not(feature = "custom_sourcemap"))] options: PrinterOptions<'a>,
+  ) -> Result<ToCssResult, Error<PrinterErrorKind>> {
     // Make sure we always have capacity > 0: https://github.com/napi-rs/napi-rs/issues/1124.
     let mut dest = String::with_capacity(1);
     let project_root = options.project_root.clone();
     let mut printer = Printer::new(&mut dest, options);
-
-    #[cfg(feature = "custom_sourcemap")]
-    {
-      printer.sources = Some(&self.sources);
-    }
+    printer.sources = Some(&self.sources);
 
     #[cfg(feature = "custom_sourcemap")]
     if printer.source_map.is_some() {
-      printer.source_maps = self.sources.iter().enumerate().map(|(i, _)| self.source_map(i)).collect();
+      printer.source_maps = self.sources.iter().enumerate().map(|(i, _)| self.source_map::<S>(i)).collect();
       printer.source_map_source_indices = &self.source_map_source_indices;
     }
 
@@ -313,7 +312,7 @@ where
       printer.newline()?;
 
       Ok(ToCssResult {
-        dependencies: printer.take_dependencies(),
+        dependencies: printer.state.dependencies,
         exports: Some(std::mem::take(
           &mut printer.state.css_module.unwrap().exports_by_source_index[0],
         )),
@@ -325,7 +324,7 @@ where
       printer.newline()?;
 
       Ok(ToCssResult {
-        dependencies: printer.take_dependencies(),
+        dependencies: printer.state.dependencies,
         code: dest,
         exports: None,
         references: None,
@@ -408,12 +407,6 @@ impl<'i> StyleAttribute<'i> {
 
   /// Serializes the style attribute to a CSS string.
   pub fn to_css(&self, options: PrinterOptions) -> Result<ToCssResult, PrinterError> {
-    #[cfg(feature = "custom_sourcemap")]
-    assert!(
-      options.source_map.is_none(),
-      "Source maps are not supported for style attributes"
-    );
-
     // Make sure we always have capacity > 0: https://github.com/napi-rs/napi-rs/issues/1124.
     let mut dest = String::with_capacity(1);
     let mut printer = Printer::new(&mut dest, options);

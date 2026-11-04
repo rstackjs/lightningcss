@@ -8,18 +8,214 @@ use crate::selector::SelectorList;
 use crate::targets::{Targets, TargetsWithSupportsScope};
 use crate::vendor_prefix::VendorPrefix;
 use cssparser::{serialize_identifier, serialize_name};
+#[cfg(feature = "sourcemap")]
+use parcel_sourcemap::SourceMap as ParcelSourceMap;
 #[cfg(feature = "custom_sourcemap")]
-use parcel_sourcemap::{OriginalLocation, SourceMap};
+use rustc_hash::FxHashSet;
 use std::fmt::Write;
+#[cfg(not(feature = "custom_sourcemap"))]
+use std::marker::PhantomData;
+
+/// An original source location referenced by a generated source map mapping.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OriginalLocation {
+  /// The zero-based line number in the original source.
+  pub original_line: u32,
+  /// The zero-based column number in the original source.
+  pub original_column: u32,
+  /// The source index in the source map.
+  pub source: u32,
+  /// The optional name index in the source map.
+  pub name: Option<u32>,
+}
+
+/// A source map implementation that can receive generated mappings and
+/// provide input mappings for remapping.
+#[cfg(feature = "custom_sourcemap")]
+pub trait SourceMap {
+  /// Adds a source path and returns its source index.
+  fn add_source(&mut self, source: &str) -> u32;
+
+  /// Adds a symbol name and returns its name index.
+  fn add_name(&mut self, name: &str) -> u32;
+
+  /// Sets the original content for a source index.
+  fn set_source_content(&mut self, source_index: u32, source_content: &str);
+
+  /// Adds a mapping from a generated position to an optional original location.
+  fn add_mapping(&mut self, generated_line: u32, generated_column: u32, original: Option<OriginalLocation>);
+
+  /// Reads an inline source map data URL.
+  fn from_data_url(source_root: &str, data_url: &str) -> Option<Self>
+  where
+    Self: Sized;
+
+  /// Finds the closest original location for a generated position.
+  fn find_closest_mapping(&mut self, line: u32, column: u32) -> Option<OriginalLocation>;
+
+  /// Returns the source path for a source index.
+  fn get_source(&self, source_index: u32) -> Option<&str>;
+
+  /// Returns the symbol name for a name index.
+  fn get_name(&self, name_index: u32) -> Option<&str>;
+
+  /// Returns the source content for a source index.
+  fn get_source_content(&self, source_index: u32) -> Option<&str>;
+}
+
+/// A source map placeholder used when custom source maps are disabled.
+#[cfg(not(feature = "custom_sourcemap"))]
+pub trait SourceMap {}
+
+#[cfg(not(feature = "custom_sourcemap"))]
+impl SourceMap for () {}
+
+#[cfg(feature = "custom_sourcemap")]
+impl SourceMap for () {
+  fn add_source(&mut self, _source: &str) -> u32 {
+    unreachable!()
+  }
+
+  fn add_name(&mut self, _name: &str) -> u32 {
+    unreachable!()
+  }
+
+  fn set_source_content(&mut self, _source_index: u32, _source_content: &str) {
+    unreachable!()
+  }
+
+  fn add_mapping(&mut self, _generated_line: u32, _generated_column: u32, _original: Option<OriginalLocation>) {
+    unreachable!()
+  }
+
+  fn from_data_url(_source_root: &str, _data_url: &str) -> Option<Self> {
+    unreachable!()
+  }
+
+  fn find_closest_mapping(&mut self, _line: u32, _column: u32) -> Option<OriginalLocation> {
+    unreachable!()
+  }
+
+  fn get_source(&self, _source_index: u32) -> Option<&str> {
+    unreachable!()
+  }
+
+  fn get_name(&self, _name_index: u32) -> Option<&str> {
+    unreachable!()
+  }
+
+  fn get_source_content(&self, _source_index: u32) -> Option<&str> {
+    unreachable!()
+  }
+}
+
+#[cfg(feature = "custom_sourcemap")]
+impl<T: SourceMap + ?Sized> SourceMap for &mut T {
+  fn add_source(&mut self, source: &str) -> u32 {
+    (**self).add_source(source)
+  }
+
+  fn add_name(&mut self, name: &str) -> u32 {
+    (**self).add_name(name)
+  }
+
+  fn set_source_content(&mut self, source_index: u32, source_content: &str) {
+    (**self).set_source_content(source_index, source_content)
+  }
+
+  fn add_mapping(&mut self, generated_line: u32, generated_column: u32, original: Option<OriginalLocation>) {
+    (**self).add_mapping(generated_line, generated_column, original)
+  }
+
+  fn from_data_url(source_root: &str, data_url: &str) -> Option<Self>
+  where
+    Self: Sized,
+  {
+    let _ = (source_root, data_url);
+    None
+  }
+
+  fn find_closest_mapping(&mut self, line: u32, column: u32) -> Option<OriginalLocation> {
+    (**self).find_closest_mapping(line, column)
+  }
+
+  fn get_source(&self, source_index: u32) -> Option<&str> {
+    (**self).get_source(source_index)
+  }
+
+  fn get_name(&self, name_index: u32) -> Option<&str> {
+    (**self).get_name(name_index)
+  }
+
+  fn get_source_content(&self, source_index: u32) -> Option<&str> {
+    (**self).get_source_content(source_index)
+  }
+}
+
+#[cfg(feature = "sourcemap")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sourcemap")))]
+impl SourceMap for ParcelSourceMap {
+  fn add_source(&mut self, source: &str) -> u32 {
+    ParcelSourceMap::add_source(self, source)
+  }
+
+  fn add_name(&mut self, name: &str) -> u32 {
+    ParcelSourceMap::add_name(self, name)
+  }
+
+  fn set_source_content(&mut self, source_index: u32, source_content: &str) {
+    let _ = ParcelSourceMap::set_source_content(self, source_index as usize, source_content);
+  }
+
+  fn add_mapping(&mut self, generated_line: u32, generated_column: u32, original: Option<OriginalLocation>) {
+    ParcelSourceMap::add_mapping(
+      self,
+      generated_line,
+      generated_column,
+      original.map(|original| parcel_sourcemap::OriginalLocation {
+        original_line: original.original_line,
+        original_column: original.original_column,
+        source: original.source,
+        name: original.name,
+      }),
+    );
+  }
+
+  fn from_data_url(source_root: &str, data_url: &str) -> Option<Self> {
+    ParcelSourceMap::from_data_url(source_root, data_url).ok()
+  }
+
+  fn find_closest_mapping(&mut self, line: u32, column: u32) -> Option<OriginalLocation> {
+    let mapping = ParcelSourceMap::find_closest_mapping(self, line, column)?;
+    mapping.original.map(|original| OriginalLocation {
+      original_line: original.original_line,
+      original_column: original.original_column,
+      source: original.source,
+      name: original.name,
+    })
+  }
+
+  fn get_source(&self, source_index: u32) -> Option<&str> {
+    ParcelSourceMap::get_source(self, source_index).ok()
+  }
+
+  fn get_name(&self, name_index: u32) -> Option<&str> {
+    ParcelSourceMap::get_name(self, name_index).ok()
+  }
+
+  fn get_source_content(&self, source_index: u32) -> Option<&str> {
+    ParcelSourceMap::get_source_content(self, source_index).ok()
+  }
+}
 
 /// Options that control how CSS is serialized to a string.
-pub struct PrinterOptions<'a> {
+pub struct PrinterOptions<'a, #[cfg(feature = "custom_sourcemap")] S: SourceMap = ()> {
   /// Whether to minify the CSS, i.e. remove white space.
   pub minify: bool,
-  /// An optional reference to a source map to write mappings into.
+  /// An optional source map to write mappings into.
   #[cfg(feature = "custom_sourcemap")]
   #[cfg_attr(docsrs, doc(cfg(feature = "custom_sourcemap")))]
-  pub source_map: Option<&'a mut SourceMap>,
+  pub source_map: Option<&'a mut S>,
   /// An optional project root path, used to generate relative paths for sources used in CSS module hashes.
   pub project_root: Option<&'a str>,
   /// Targets to output the CSS for.
@@ -47,6 +243,21 @@ impl<'a> Default for PrinterOptions<'a> {
       targets: Targets::default(),
       analyze_dependencies: None,
       pseudo_classes: None,
+    }
+  }
+}
+
+#[cfg(feature = "custom_sourcemap")]
+impl<'a, S: SourceMap> PrinterOptions<'a, S> {
+  /// Set the source map writer while retaining all other printer options.
+  pub fn with_source_map<T: SourceMap>(self, source_map: impl Into<Option<&'a mut T>>) -> PrinterOptions<'a, T> {
+    PrinterOptions {
+      minify: self.minify,
+      source_map: source_map.into(),
+      project_root: self.project_root,
+      targets: self.targets,
+      analyze_dependencies: self.analyze_dependencies,
+      pseudo_classes: self.pseudo_classes,
     }
   }
 }
@@ -91,23 +302,44 @@ pub struct PseudoClasses<'a> {
 ///
 /// `Printer` also includes helper functions that assist with writing output
 /// that respects options such as `minify`, and `css_modules`.
-pub struct Printer<'a, 'c, W> {
+pub struct Printer<'a, 'c, W, S: SourceMap = ()> {
   pub(crate) sources: Option<&'c Vec<String>>,
   dest: &'a mut W,
   pub(crate) options: PrinterOptions<'a>,
   pub(crate) state: PrinterState<'a, 'c>,
   #[cfg(feature = "custom_sourcemap")]
-  pub(crate) source_map: Option<&'a mut SourceMap>,
+  pub(crate) source_map: Option<&'a mut S>,
   #[cfg(feature = "custom_sourcemap")]
-  pub(crate) source_maps: Vec<Option<SourceMap>>,
+  pub(crate) source_maps: Vec<Option<S>>,
   #[cfg(feature = "custom_sourcemap")]
   pub(crate) source_map_source_indices: &'c [Option<u32>],
+  #[cfg(feature = "custom_sourcemap")]
+  sources_with_content: FxHashSet<u32>,
+  #[cfg(not(feature = "custom_sourcemap"))]
+  source_map: PhantomData<fn() -> S>,
 }
 
-impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
+#[cfg(not(feature = "custom_sourcemap"))]
+impl<'a, 'c, W: Write> Printer<'a, 'c, W> {
   /// Create a new Printer wrapping the given destination.
-  #[cfg_attr(not(feature = "custom_sourcemap"), allow(unused_mut))]
-  pub fn new(dest: &'a mut W, mut options: PrinterOptions<'a>) -> Self {
+  pub fn new(dest: &'a mut W, options: PrinterOptions<'a>) -> Self {
+    Self::new_impl(dest, options)
+  }
+}
+
+impl<'a, 'c, W: std::fmt::Write + Sized, S: SourceMap> Printer<'a, 'c, W, S> {
+  /// Create a new Printer wrapping the given destination.
+  #[cfg(feature = "custom_sourcemap")]
+  pub fn new(dest: &'a mut W, mut options: PrinterOptions<'a, S>) -> Self {
+    let source_map = options.source_map.take();
+    Self::new_impl(dest, options.with_source_map(None), source_map)
+  }
+
+  fn new_impl(
+    dest: &'a mut W,
+    options: PrinterOptions<'a>,
+    #[cfg(feature = "custom_sourcemap")] source_map: Option<&'a mut S>,
+  ) -> Self {
     let dependencies = if options.analyze_dependencies.is_some() {
       Some(Vec::new())
     } else {
@@ -118,7 +350,7 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
       sources: None,
       dest,
       #[cfg(feature = "custom_sourcemap")]
-      source_map: options.source_map.take(),
+      source_map,
       state: PrinterState {
         loc: Location {
           source_index: 0,
@@ -141,6 +373,10 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
       source_maps: Vec::new(),
       #[cfg(feature = "custom_sourcemap")]
       source_map_source_indices: &[],
+      #[cfg(feature = "custom_sourcemap")]
+      sources_with_content: FxHashSet::default(),
+      #[cfg(not(feature = "custom_sourcemap"))]
+      source_map: PhantomData,
     }
   }
 
@@ -328,23 +564,22 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
       // Remap using input source map if possible.
       if let Some(Some(sm)) = self.source_maps.get_mut(loc.source_index as usize) {
         let mut found_mapping = false;
-        if let Some(mapping) = sm.find_closest_mapping(loc.line, loc.column - 1) {
-          if let Some(orig) = mapping.original {
-            let sources_len = map.get_sources().len();
-            let source_index = map.add_source(sm.get_source(orig.source).unwrap());
-            let name = orig.name.map(|name| map.add_name(sm.get_name(name).unwrap()));
-            original.original_line = orig.original_line;
-            original.original_column = orig.original_column;
-            original.source = source_index;
-            original.name = name;
+        if let Some(orig) = sm.find_closest_mapping(loc.line, loc.column - 1) {
+          let source_index = map.add_source(sm.get_source(orig.source).unwrap());
+          let name = orig.name.map(|name| map.add_name(sm.get_name(name).unwrap()));
+          original.original_line = orig.original_line;
+          original.original_column = orig.original_column;
+          original.source = source_index;
+          original.name = name;
 
-            if map.get_sources().len() > sources_len {
-              let content = sm.get_source_content(orig.source).unwrap().to_owned();
-              let _ = map.set_source_content(source_index as usize, &content);
+          if !self.sources_with_content.contains(&source_index) {
+            if let Some(content) = sm.get_source_content(orig.source) {
+              map.set_source_content(source_index, content);
+              self.sources_with_content.insert(source_index);
             }
-
-            found_mapping = true;
           }
+
+          found_mapping = true;
         }
 
         if !found_mapping {
@@ -352,7 +587,7 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
         }
       }
 
-      map.add_mapping(self.state.generated_line, self.state.generated_col, Some(original));
+      map.add_mapping(self.state.generated_line, self.state.generated_col, Some(original))
     }
   }
 
@@ -388,7 +623,7 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
   }
 }
 
-impl<'a, 'c, W: std::fmt::Write + Sized> Write for Printer<'a, 'c, W> {
+impl<'a, 'c, W: std::fmt::Write + Sized, S: SourceMap> Write for Printer<'a, 'c, W, S> {
   fn write_str(&mut self, s: &str) -> std::fmt::Result {
     let mut last_line_start = 0;
     for (idx, c) in s.char_indices() {
@@ -493,7 +728,7 @@ pub trait PrinterTrait: std::fmt::Write + private::Sealed {
   fn without_css_module<T, E>(&mut self, f: impl FnOnce(&mut Self) -> Result<T, E>) -> Result<T, E>;
 }
 
-impl<W: Write> private::Sealed for Printer<'_, '_, W> {
+impl<W: Write, S: SourceMap> private::Sealed for Printer<'_, '_, W, S> {
   fn targets(&self) -> &TargetsWithSupportsScope {
     &self.state.targets
   }
@@ -583,7 +818,7 @@ impl<W: Write> private::Sealed for Printer<'_, '_, W> {
   }
 }
 
-impl<'a, 'c, W: std::fmt::Write + Sized> PrinterTrait for Printer<'a, 'c, W> {
+impl<'a, 'c, W: std::fmt::Write + Sized, S: SourceMap> PrinterTrait for Printer<'a, 'c, W, S> {
   fn options(&self) -> &PrinterOptions<'_> {
     &self.options
   }
