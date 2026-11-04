@@ -141,7 +141,7 @@ pub struct PageMarginRule<'i> {
 
 impl<'i> ToCss for PageMarginRule<'i> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_char('@')?;
     self.margin_box.to_css(dest)?;
@@ -206,7 +206,7 @@ impl<'i> PageRule<'i> {
 
 impl<'i> ToCss for PageRule<'i> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@page")?;
     if let Some(first) = self.selectors.first() {

@@ -60,7 +60,7 @@ impl<'i, T: Clone> SupportsRule<'i, T> {
 
 impl<'a, 'i, T: ToCss> ToCss for SupportsRule<'i, T> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@supports ")?;
     self.condition.to_css(dest)?;

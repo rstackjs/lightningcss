@@ -32,7 +32,7 @@ pub struct ViewportRule<'i> {
 
 impl<'i> ToCss for ViewportRule<'i> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_char('@')?;
     self.vendor_prefix.to_css(dest)?;

@@ -19,7 +19,7 @@ use crate::values::string::CowArcStr;
 #[cfg(feature = "visitor")]
 use crate::visitor::{Visit, VisitTypes, Visitor};
 use cssparser::{Parser, ParserInput, StyleSheetParser};
-#[cfg(feature = "sourcemap")]
+#[cfg(feature = "custom_sourcemap")]
 use parcel_sourcemap::SourceMap;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
@@ -83,7 +83,7 @@ pub struct StyleSheet<'i, T = DefaultAtRule> {
   /// The source map URL extracted from the original style sheet.
   pub source_map_urls: Vec<Option<String>>,
   /// Output source map indices corresponding to the bundler's source indices.
-  #[cfg(feature = "sourcemap")]
+  #[cfg(feature = "custom_sourcemap")]
   #[cfg_attr(feature = "serde", serde(skip))]
   pub(crate) source_map_source_indices: Vec<Option<u32>>,
   /// The license comments that appeared at the start of the file.
@@ -141,7 +141,7 @@ where
     StyleSheet {
       sources,
       source_map_urls: Vec::new(),
-      #[cfg(feature = "sourcemap")]
+      #[cfg(feature = "custom_sourcemap")]
       source_map_source_indices: Vec::new(),
       license_comments: Vec::new(),
       content_hashes: None,
@@ -210,7 +210,7 @@ where
     Ok(StyleSheet {
       sources: vec![options.filename.clone()],
       source_map_urls: vec![parser.current_source_map_url().map(|s| s.to_owned())],
-      #[cfg(feature = "sourcemap")]
+      #[cfg(feature = "custom_sourcemap")]
       source_map_source_indices: Vec::new(),
       content_hashes,
       rules,
@@ -225,8 +225,8 @@ where
   }
 
   /// Returns the inline source map associated with the source at the given index.
-  #[cfg(feature = "sourcemap")]
-  #[cfg_attr(docsrs, doc(cfg(feature = "sourcemap")))]
+  #[cfg(feature = "custom_sourcemap")]
+  #[cfg_attr(docsrs, doc(cfg(feature = "custom_sourcemap")))]
   pub fn source_map(&self, source_index: usize) -> Option<SourceMap> {
     SourceMap::from_data_url("/", self.source_map_url(source_index)?).ok()
   }
@@ -282,12 +282,12 @@ where
     let project_root = options.project_root.clone();
     let mut printer = Printer::new(&mut dest, options);
 
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     {
       printer.sources = Some(&self.sources);
     }
 
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     if printer.source_map.is_some() {
       printer.source_maps = self.sources.iter().enumerate().map(|(i, _)| self.source_map(i)).collect();
       printer.source_map_source_indices = &self.source_map_source_indices;
@@ -408,7 +408,7 @@ impl<'i> StyleAttribute<'i> {
 
   /// Serializes the style attribute to a CSS string.
   pub fn to_css(&self, options: PrinterOptions) -> Result<ToCssResult, PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     assert!(
       options.source_map.is_none(),
       "Source maps are not supported for style attributes"

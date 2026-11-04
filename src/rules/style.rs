@@ -245,7 +245,7 @@ impl<'a, 'i, T: ToCss> StyleRule<'i, T> {
     let has_declarations = supports_nesting || len > 0 || self.rules.0.is_empty() || has_preserved_rules;
 
     if has_declarations {
-      #[cfg(feature = "sourcemap")]
+      #[cfg(feature = "custom_sourcemap")]
       dest.add_mapping(self.loc);
       self.selectors.to_css(dest)?;
       dest.whitespace()?;

@@ -8,7 +8,7 @@ use crate::selector::SelectorList;
 use crate::targets::{Targets, TargetsWithSupportsScope};
 use crate::vendor_prefix::VendorPrefix;
 use cssparser::{serialize_identifier, serialize_name};
-#[cfg(feature = "sourcemap")]
+#[cfg(feature = "custom_sourcemap")]
 use parcel_sourcemap::{OriginalLocation, SourceMap};
 use std::fmt::Write;
 
@@ -17,8 +17,8 @@ pub struct PrinterOptions<'a> {
   /// Whether to minify the CSS, i.e. remove white space.
   pub minify: bool,
   /// An optional reference to a source map to write mappings into.
-  #[cfg(feature = "sourcemap")]
-  #[cfg_attr(docsrs, doc(cfg(feature = "sourcemap")))]
+  #[cfg(feature = "custom_sourcemap")]
+  #[cfg_attr(docsrs, doc(cfg(feature = "custom_sourcemap")))]
   pub source_map: Option<&'a mut SourceMap>,
   /// An optional project root path, used to generate relative paths for sources used in CSS module hashes.
   pub project_root: Option<&'a str>,
@@ -41,7 +41,7 @@ impl<'a> Default for PrinterOptions<'a> {
   fn default() -> Self {
     PrinterOptions {
       minify: false,
-      #[cfg(feature = "sourcemap")]
+      #[cfg(feature = "custom_sourcemap")]
       source_map: None,
       project_root: None,
       targets: Targets::default(),
@@ -96,17 +96,17 @@ pub struct Printer<'a, 'c, W> {
   dest: &'a mut W,
   pub(crate) options: PrinterOptions<'a>,
   pub(crate) state: PrinterState<'a, 'c>,
-  #[cfg(feature = "sourcemap")]
+  #[cfg(feature = "custom_sourcemap")]
   pub(crate) source_map: Option<&'a mut SourceMap>,
-  #[cfg(feature = "sourcemap")]
+  #[cfg(feature = "custom_sourcemap")]
   pub(crate) source_maps: Vec<Option<SourceMap>>,
-  #[cfg(feature = "sourcemap")]
+  #[cfg(feature = "custom_sourcemap")]
   pub(crate) source_map_source_indices: &'c [Option<u32>],
 }
 
 impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
   /// Create a new Printer wrapping the given destination.
-  #[cfg_attr(not(feature = "sourcemap"), allow(unused_mut))]
+  #[cfg_attr(not(feature = "custom_sourcemap"), allow(unused_mut))]
   pub fn new(dest: &'a mut W, mut options: PrinterOptions<'a>) -> Self {
     let dependencies = if options.analyze_dependencies.is_some() {
       Some(Vec::new())
@@ -117,7 +117,7 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
     Printer {
       sources: None,
       dest,
-      #[cfg(feature = "sourcemap")]
+      #[cfg(feature = "custom_sourcemap")]
       source_map: options.source_map.take(),
       state: PrinterState {
         loc: Location {
@@ -137,9 +137,9 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
         context: None,
       },
       options,
-      #[cfg(feature = "sourcemap")]
+      #[cfg(feature = "custom_sourcemap")]
       source_maps: Vec::new(),
-      #[cfg(feature = "sourcemap")]
+      #[cfg(feature = "custom_sourcemap")]
       source_map_source_indices: &[],
     }
   }
@@ -307,8 +307,8 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
   }
 
   /// Adds a mapping to the source map, if any.
-  #[cfg(feature = "sourcemap")]
-  #[cfg_attr(docsrs, doc(cfg(feature = "sourcemap")))]
+  #[cfg(feature = "custom_sourcemap")]
+  #[cfg_attr(docsrs, doc(cfg(feature = "custom_sourcemap")))]
   pub fn add_mapping(&mut self, loc: Location) {
     self.state.loc = loc;
 
@@ -481,7 +481,7 @@ pub trait PrinterTrait: std::fmt::Write + private::Sealed {
   fn whitespace(&mut self) -> Result<(), PrinterError>;
   fn delim(&mut self, c: char, ws_before: bool) -> Result<(), PrinterError>;
   fn newline(&mut self) -> Result<(), PrinterError>;
-  #[cfg(feature = "sourcemap")]
+  #[cfg(feature = "custom_sourcemap")]
   fn add_mapping(&mut self, loc: Location);
   fn indent(&mut self);
   fn dedent(&mut self);
@@ -604,7 +604,7 @@ impl<'a, 'c, W: std::fmt::Write + Sized> PrinterTrait for Printer<'a, 'c, W> {
     Printer::newline(self)
   }
 
-  #[cfg(feature = "sourcemap")]
+  #[cfg(feature = "custom_sourcemap")]
   fn add_mapping(&mut self, loc: Location) {
     Printer::add_mapping(self, loc)
   }
