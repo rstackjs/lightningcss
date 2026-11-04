@@ -18,6 +18,7 @@ use crate::visitor::Visit;
 use cssparser::*;
 use itertools::izip;
 use smallvec::SmallVec;
+use std::fmt::Write;
 
 /// A value for the [background-size](https://www.w3.org/TR/css-backgrounds-3/#background-size) property.
 #[derive(Debug, Clone, PartialEq)]
@@ -81,8 +82,14 @@ impl ToCss for BackgroundSize {
     use BackgroundSize::*;
 
     match &self {
-      Cover => dest.write_str("cover"),
-      Contain => dest.write_str("contain"),
+      Cover => {
+        dest.write_str("cover")?;
+        Ok(())
+      }
+      Contain => {
+        dest.write_str("contain")?;
+        Ok(())
+      }
       Explicit { width, height } => {
         width.to_css(dest)?;
         if *height != NonNegative(LengthPercentageOrAuto::Auto) {
@@ -173,8 +180,14 @@ impl ToCss for BackgroundRepeat {
   {
     use BackgroundRepeatKeyword::*;
     match (&self.x, &self.y) {
-      (Repeat, NoRepeat) => dest.write_str("repeat-x"),
-      (NoRepeat, Repeat) => dest.write_str("repeat-y"),
+      (Repeat, NoRepeat) => {
+        dest.write_str("repeat-x")?;
+        Ok(())
+      }
+      (NoRepeat, Repeat) => {
+        dest.write_str("repeat-y")?;
+        Ok(())
+      }
       (x, y) => {
         x.to_css(dest)?;
         if y != x {

@@ -21,6 +21,7 @@ use crate::vendor_prefix::VendorPrefix;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
+use std::fmt::Write;
 
 /// A [@keyframes](https://drafts.csswg.org/css-animations/#keyframes) rule.
 #[derive(Debug, PartialEq, Clone)]
@@ -321,19 +322,25 @@ impl ToCss for KeyframeSelector {
     match self {
       KeyframeSelector::Percentage(p) => {
         if dest.minify && *p == Percentage(1.0) {
-          dest.write_str("to")
+          dest.write_str("to")?;
+          Ok(())
         } else {
           p.to_css(dest)
         }
       }
       KeyframeSelector::From => {
         if dest.minify {
-          dest.write_str("0%")
+          dest.write_str("0%")?;
+          Ok(())
         } else {
-          dest.write_str("from")
+          dest.write_str("from")?;
+          Ok(())
         }
       }
-      KeyframeSelector::To => dest.write_str("to"),
+      KeyframeSelector::To => {
+        dest.write_str("to")?;
+        Ok(())
+      }
       KeyframeSelector::TimelineRangePercentage(TimelineRangePercentage {
         name: timeline_range_name,
         percentage,

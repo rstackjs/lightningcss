@@ -23,6 +23,7 @@ use crate::{
   },
 };
 use cssparser::*;
+use std::fmt::Write;
 
 enum_property! {
   /// A single [border-image-repeat](https://www.w3.org/TR/css-backgrounds-3/#border-image-repeat) keyword.
@@ -311,7 +312,8 @@ impl<'i> BorderImage<'i> {
 
     // A shorthand with only initial components must still have a value.
     if !has_source && !has_slice && !has_width && !has_outset && !has_repeat {
-      return dest.write_str("none");
+      dest.write_str("none")?;
+      return Ok(());
     }
 
     if has_source {

@@ -11,6 +11,7 @@ use crate::values;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
+use std::fmt::Write;
 
 /// A CSS [syntax string](https://drafts.css-houdini.org/css-properties-values-api/#syntax-strings)
 /// used to define the grammar for a registered custom property.
@@ -417,7 +418,9 @@ impl ToCss for SyntaxString {
       }
     }
 
-    dest.write_char('"')
+    dest.write_char('"')?;
+
+    Ok(())
   }
 }
 
@@ -429,8 +432,14 @@ impl ToCss for SyntaxComponent {
     self.kind.to_css(dest)?;
     match self.multiplier {
       Multiplier::None => Ok(()),
-      Multiplier::Comma => dest.write_char('#'),
-      Multiplier::Space => dest.write_char('+'),
+      Multiplier::Comma => {
+        dest.write_char('#')?;
+        Ok(())
+      }
+      Multiplier::Space => {
+        dest.write_char('+')?;
+        Ok(())
+      }
     }
   }
 }
@@ -459,7 +468,8 @@ impl ToCss for SyntaxComponentKind {
       CustomIdent => "<custom-ident>",
       Literal(l) => l,
     };
-    dest.write_str(s)
+    dest.write_str(s)?;
+    Ok(())
   }
 }
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, convert::Infallible};
+use std::{collections::HashMap, convert::Infallible, fmt::Write};
 
 use cssparser::*;
 use rspack_lightningcss::{
@@ -295,7 +295,8 @@ impl ToCss for AtRule {
           TailwindDirective::Utilities => "TAILWIND UTILITIES HERE",
           TailwindDirective::Variants => "TAILWIND VARIANTS HERE",
         };
-        dest.write_str(directive)
+        dest.write_str(directive)?;
+        Ok(())
       }
       AtRule::Apply(_) => Ok(()),
     }

@@ -110,7 +110,8 @@ impl<'i> ToCss for Source<'i> {
       Source::Local(local) => {
         dest.write_str("local(")?;
         local.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
     }
   }
@@ -425,8 +426,14 @@ impl ToCss for FontStyle {
     W: std::fmt::Write,
   {
     match self {
-      FontStyle::Normal => dest.write_str("normal"),
-      FontStyle::Italic => dest.write_str("italic"),
+      FontStyle::Normal => {
+        dest.write_str("normal")?;
+        Ok(())
+      }
+      FontStyle::Italic => {
+        dest.write_str("italic")?;
+        Ok(())
+      }
       FontStyle::Oblique(angle) => {
         dest.write_str("oblique")?;
         if *angle != FontStyle::default_oblique_angle() {
@@ -530,7 +537,8 @@ impl<'i> ToCss for FontFaceRule<'i> {
     }
     dest.dedent();
     dest.newline()?;
-    dest.write_char('}')
+    dest.write_char('}')?;
+    Ok(())
   }
 }
 
