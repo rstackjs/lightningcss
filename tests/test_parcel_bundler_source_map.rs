@@ -33,12 +33,7 @@ fn assert_bundled_source(css: &'static str) {
 
   let mut bundler = Bundler::new(&fs, Some(&mut map), ParserOptions::default());
   let stylesheet = bundler.bundle(Path::new("/entry.css")).unwrap();
-  stylesheet
-    .to_css(PrinterOptions {
-      source_map: Some(&mut map),
-      ..PrinterOptions::default()
-    })
-    .unwrap();
+  stylesheet.to_css(PrinterOptions::default().with_source_map(&mut map)).unwrap();
 
   let source_index = map.find_closest_mapping(0, 0).unwrap().original.unwrap().source;
   assert_ne!(source_index, existing_index);
