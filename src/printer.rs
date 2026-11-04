@@ -72,6 +72,8 @@ pub struct Printer<'a, 'c, W> {
   #[cfg(feature = "sourcemap")]
   #[cfg_attr(docsrs, doc(cfg(feature = "sourcemap")))]
   pub(crate) source_maps: Vec<Option<SourceMap>>,
+  #[cfg(feature = "sourcemap")]
+  pub(crate) source_map_source_indices: &'c [Option<u32>],
   pub(crate) loc: Location,
   indent: u8,
   line: u32,
@@ -99,6 +101,8 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
       source_map: options.source_map,
       #[cfg(feature = "sourcemap")]
       source_maps: Vec::new(),
+      #[cfg(feature = "sourcemap")]
+      source_map_source_indices: &[],
       loc: Location {
         source_index: 0,
         line: 0,
@@ -249,7 +253,12 @@ impl<'a, 'c, W: std::fmt::Write + Sized> Printer<'a, 'c, W> {
       let mut original = OriginalLocation {
         original_line: loc.line,
         original_column: loc.column - 1,
-        source: loc.source_index,
+        source: self
+          .source_map_source_indices
+          .get(loc.source_index as usize)
+          .copied()
+          .flatten()
+          .unwrap_or(loc.source_index),
         name: None,
       };
 

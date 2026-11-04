@@ -79,6 +79,7 @@ enum AtRuleParserValue<'a, T> {
 
 struct BundleStyleSheet<'i, T> {
   stylesheet: Option<StyleSheet<'i, T>>,
+  source_map_source_index: Option<u32>,
   dependencies: Vec<Dependency>,
   css_modules_deps: Vec<u32>,
   parent_source_index: u32,
@@ -316,6 +317,16 @@ where
 
     let mut stylesheet = StyleSheet::new(sources, CssRuleList(rules), self.options.clone());
 
+    if self.source_map.is_some() {
+      stylesheet.source_map_source_indices = self
+        .stylesheets
+        .get_mut()
+        .unwrap()
+        .iter()
+        .map(|s| s.source_map_source_index)
+        .collect();
+    }
+
     stylesheet.source_map_urls = self
       .stylesheets
       .get_mut()
@@ -415,6 +426,7 @@ where
 
         stylesheets.push(BundleStyleSheet {
           stylesheet: None,
+          source_map_source_index: None,
           layer: rule.layer.clone(),
           media: rule.media.clone(),
           supports: rule.supports.clone(),
@@ -455,14 +467,15 @@ where
       StyleSheet::<T::AtRule>::parse_with(code, opts, at_rule_parser)?
     };
 
+    let mut source_map_source_index = None;
     if let Some(source_map) = &self.source_map {
-      // Only add source if we don't have an input source map.
-      // If we do, this will be handled by the printer when remapping locations.
-      let sm = stylesheet.source_map_url(0);
-      if sm.is_none() || !sm.unwrap().starts_with("data") {
+      // Only omit the CSS source when the input source map can actually be read.
+      // Otherwise, the printer needs this index as a fallback for generated mappings.
+      if stylesheet.source_map(0).is_none() {
         let mut source_map = source_map.lock().unwrap();
         let source_index = source_map.add_source(filename);
         let _ = source_map.set_source_content(source_index as usize, code);
+        source_map_source_index = Some(source_index);
       }
     }
 
@@ -606,6 +619,7 @@ where
 
     let entry = &mut self.stylesheets.lock().unwrap()[source_index as usize];
     entry.stylesheet = Some(stylesheet);
+    entry.source_map_source_index = source_map_source_index;
     entry.dependencies = dependencies?;
     entry.css_modules_deps = css_modules_deps?;
 
