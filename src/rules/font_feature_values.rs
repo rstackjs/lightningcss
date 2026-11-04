@@ -151,7 +151,7 @@ impl<'a, 'i> RuleBodyItemParser<'i, (), ParserError<'i>> for FontFeatureValuesRu
 
 impl<'i> ToCss for FontFeatureValuesRule<'i> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@font-feature-values ")?;
     self.name.to_css(dest)?;
@@ -237,7 +237,7 @@ pub struct FontFeatureSubrule<'i> {
 
 impl<'i> ToCss for FontFeatureSubrule<'i> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_char('@')?;
     self.name.to_css(dest)?;

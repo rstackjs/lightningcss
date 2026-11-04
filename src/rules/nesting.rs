@@ -42,7 +42,7 @@ impl<'i, T: Clone> NestingRule<'i, T> {
 
 impl<'a, 'i, T: ToCss> ToCss for NestingRule<'i, T> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     if !dest.has_context() {
       dest.write_str("@nest ")?;
@@ -83,7 +83,7 @@ impl<'i> NestedDeclarationsRule<'i> {
 
 impl<'i> ToCss for NestedDeclarationsRule<'i> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
 
     dest.with_current_context(ContextAccess, |dest, context| {
