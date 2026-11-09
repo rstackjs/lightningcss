@@ -80,6 +80,10 @@ pub struct StyleSheet<'i, T = DefaultAtRule> {
   pub sources: Vec<String>,
   /// The source map URL extracted from the original style sheet.
   pub source_map_urls: Vec<Option<String>>,
+  /// Output source map indices corresponding to the bundler's source indices.
+  #[cfg(feature = "sourcemap")]
+  #[cfg_attr(feature = "serde", serde(skip))]
+  pub(crate) source_map_source_indices: Vec<Option<u32>>,
   /// The license comments that appeared at the start of the file.
   pub license_comments: Vec<CowArcStr<'i>>,
   /// A list of content hashes for all source files included within the style sheet.
@@ -135,6 +139,8 @@ where
     StyleSheet {
       sources,
       source_map_urls: Vec::new(),
+      #[cfg(feature = "sourcemap")]
+      source_map_source_indices: Vec::new(),
       license_comments: Vec::new(),
       content_hashes: None,
       rules,
@@ -202,6 +208,8 @@ where
     Ok(StyleSheet {
       sources: vec![options.filename.clone()],
       source_map_urls: vec![parser.current_source_map_url().map(|s| s.to_owned())],
+      #[cfg(feature = "sourcemap")]
+      source_map_source_indices: Vec::new(),
       content_hashes,
       rules,
       license_comments,
@@ -280,6 +288,7 @@ where
     #[cfg(feature = "sourcemap")]
     if printer.source_map.is_some() {
       printer.source_maps = self.sources.iter().enumerate().map(|(i, _)| self.source_map(i)).collect();
+      printer.source_map_source_indices = &self.source_map_source_indices;
     }
 
     for comment in &self.license_comments {
