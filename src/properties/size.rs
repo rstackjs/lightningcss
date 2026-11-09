@@ -6,7 +6,6 @@ use crate::declaration::DeclarationList;
 use crate::error::{ParserError, PrinterError};
 use crate::logical::PropertyCategory;
 use crate::macros::{enum_property, property_bitflags};
-use crate::printer::Printer;
 use crate::properties::{Property, PropertyId};
 use crate::targets::Targets;
 use crate::traits::{IsCompatible, Parse, PropertyHandler, ToCss};
@@ -17,7 +16,6 @@ use crate::vendor_prefix::VendorPrefix;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 #[cfg(feature = "serde")]
 use crate::serialization::*;
@@ -98,10 +96,7 @@ impl<'i> Parse<'i> for Size {
 }
 
 impl ToCss for Size {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     use Size::*;
     match self {
       Auto => {
@@ -250,10 +245,7 @@ impl<'i> Parse<'i> for MaxSize {
 }
 
 impl ToCss for MaxSize {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     use MaxSize::*;
     match self {
       None => {
@@ -448,10 +440,7 @@ impl<'i> Parse<'i> for AspectRatio {
 }
 
 impl ToCss for AspectRatio {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     if self.auto {
       dest.write_str("auto")?;
     }

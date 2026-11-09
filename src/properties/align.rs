@@ -8,7 +8,6 @@ use crate::declaration::{DeclarationBlock, DeclarationList};
 use crate::error::{ParserError, PrinterError};
 use crate::macros::*;
 use crate::prefixes::{is_flex_2009, Feature};
-use crate::printer::Printer;
 use crate::traits::{FromStandard, Parse, PropertyHandler, Shorthand, ToCss};
 use crate::values::length::LengthPercentage;
 use crate::values::number::NonNegative;
@@ -16,7 +15,6 @@ use crate::vendor_prefix::VendorPrefix;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 #[cfg(feature = "serde")]
 use crate::serialization::ValueWrapper;
@@ -60,10 +58,7 @@ impl<'i> Parse<'i> for BaselinePosition {
 }
 
 impl ToCss for BaselinePosition {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       BaselinePosition::First => dest.write_str("baseline")?,
       BaselinePosition::Last => dest.write_str("last baseline")?,
@@ -208,10 +203,7 @@ impl<'i> Parse<'i> for JustifyContent {
 }
 
 impl ToCss for JustifyContent {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       JustifyContent::Normal => dest.write_str("normal")?,
       JustifyContent::ContentDistribution(value) => value.to_css(dest)?,
@@ -283,10 +275,7 @@ impl<'i> Parse<'i> for PlaceContent {
 }
 
 impl ToCss for PlaceContent {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.align.to_css(dest)?;
     let is_equal = match self.justify {
       JustifyContent::Normal if self.align == AlignContent::Normal => true,
@@ -432,10 +421,7 @@ impl<'i> Parse<'i> for JustifySelf {
 }
 
 impl ToCss for JustifySelf {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       JustifySelf::Auto => dest.write_str("auto")?,
       JustifySelf::Normal => dest.write_str("normal")?,
@@ -505,10 +491,7 @@ impl<'i> Parse<'i> for PlaceSelf {
 }
 
 impl ToCss for PlaceSelf {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.align.to_css(dest)?;
     let is_equal = match &self.justify {
       JustifySelf::Auto => true,
@@ -614,10 +597,7 @@ impl<'i> Parse<'i> for LegacyJustify {
 }
 
 impl ToCss for LegacyJustify {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     dest.write_str("legacy ")?;
     match self {
       LegacyJustify::Left => dest.write_str("left")?,
@@ -704,10 +684,7 @@ impl<'i> Parse<'i> for JustifyItems {
 }
 
 impl ToCss for JustifyItems {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       JustifyItems::Normal => dest.write_str("normal")?,
       JustifyItems::Stretch => dest.write_str("stretch")?,
@@ -776,10 +753,7 @@ impl<'i> Parse<'i> for PlaceItems {
 }
 
 impl ToCss for PlaceItems {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.align.to_css(dest)?;
     let is_equal = match &self.justify {
       JustifyItems::Normal => self.align == AlignItems::Normal,
@@ -839,10 +813,7 @@ impl<'i> Parse<'i> for Gap {
 }
 
 impl ToCss for Gap {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     self.row.to_css(dest)?;
     if self.column != self.row {
       dest.write_str(" ")?;

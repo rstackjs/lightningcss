@@ -2,7 +2,6 @@
 
 use crate::dependencies::{Dependency, Location, UrlDependency};
 use crate::error::{ParserError, PrinterError};
-use crate::printer::Printer;
 use crate::traits::{Parse, ToCss};
 use crate::values::string::CowArcStr;
 #[cfg(feature = "visitor")]
@@ -40,11 +39,8 @@ impl<'i> Parse<'i> for Url<'i> {
 }
 
 impl<'i> ToCss for Url<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
-    let dep = if dest.dependencies.is_some() {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
+    let dep = if dest.has_dependencies() {
       Some(UrlDependency::new(self, dest.filename()))
     } else {
       None
@@ -57,15 +53,13 @@ impl<'i> ToCss for Url<'i> {
       serialize_string(&dep.placeholder, dest)?;
       dest.write_char(')')?;
 
-      if let Some(dependencies) = &mut dest.dependencies {
-        dependencies.push(Dependency::Url(dep))
-      }
+      dest.add_dependency(Dependency::Url(dep));
 
       return Ok(());
     }
 
     use cssparser::ToCss;
-    if dest.minify {
+    if dest.options().minify {
       let mut buf = String::new();
       Token::UnquotedUrl(CowRcStr::from(self.url.as_ref())).to_css(&mut buf)?;
 

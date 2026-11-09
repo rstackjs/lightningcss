@@ -1,10 +1,9 @@
 use cssparser::*;
-use std::fmt::Write;
 
 use rspack_lightningcss::{
   declaration::DeclarationBlock,
   error::{ParserError, PrinterError},
-  printer::Printer,
+  printer::PrinterTrait,
   stylesheet::{ParserOptions, PrinterOptions, StyleSheet},
   traits::{AtRuleParser, Parse, ToCss},
   values::ident::Ident,
@@ -130,7 +129,7 @@ impl<'i> AtRuleParser<'i> for TestAtRuleParser {
 }
 
 impl<'i> ToCss for AtRule<'i> {
-  fn to_css<W: std::fmt::Write>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError> {
+  fn to_css<PrinterT: PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       AtRule::Block(rule) => {
         dest.write_str("@block ")?;

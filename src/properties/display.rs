@@ -7,13 +7,11 @@ use crate::declaration::DeclarationList;
 use crate::error::{ParserError, PrinterError};
 use crate::macros::enum_property;
 use crate::prefixes::{is_flex_2009, Feature};
-use crate::printer::Printer;
 use crate::traits::{Parse, PropertyHandler, ToCss};
 use crate::vendor_prefix::VendorPrefix;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 enum_property! {
   /// A [`<display-outside>`](https://drafts.csswg.org/css-display-3/#typedef-display-outside) value.
@@ -68,10 +66,7 @@ impl<'i> Parse<'i> for DisplayInside {
 }
 
 impl ToCss for DisplayInside {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       DisplayInside::Flow => dest.write_str("flow")?,
       DisplayInside::FlowRoot => dest.write_str("flow-root")?,
@@ -228,10 +223,7 @@ impl<'i> Parse<'i> for DisplayPair {
 }
 
 impl ToCss for DisplayPair {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       DisplayPair {
         outside: DisplayOutside::Inline,

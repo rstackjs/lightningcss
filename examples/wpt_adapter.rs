@@ -1,6 +1,6 @@
 //! Test-only JSONL bridge for the WPT harness. No production parser behavior is changed.
 use cssparser::{Parser, ParserInput};
-use lightningcss::{
+use rspack_lightningcss::{
   properties::{
     custom::{CustomPropertyName, TokenList, TokenOrValue, UnresolvedColor},
     Property, PropertyId,

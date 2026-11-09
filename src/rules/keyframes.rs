@@ -7,7 +7,6 @@ use crate::context::DeclarationContext;
 use crate::declaration::DeclarationBlock;
 use crate::error::{ParserError, PrinterError};
 use crate::parser::ParserOptions;
-use crate::printer::Printer;
 use crate::properties::animation::TimelineRangeName;
 use crate::properties::custom::{CustomProperty, UnparsedProperty};
 use crate::properties::Property;
@@ -21,7 +20,6 @@ use crate::vendor_prefix::VendorPrefix;
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
-use std::fmt::Write;
 
 /// A [@keyframes](https://drafts.csswg.org/css-animations/#keyframes) rule.
 #[derive(Debug, PartialEq, Clone)]
@@ -90,12 +88,8 @@ impl<'i> Parse<'i> for KeyframesName<'i> {
 }
 
 impl<'i> ToCss for KeyframesName<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
-    let css_module_animation_enabled =
-      dest.css_module.as_ref().map_or(false, |css_module| css_module.config.animation);
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
+    let css_module_animation_enabled = dest.css_module_config().is_some_and(|config| config.animation);
 
     match self {
       KeyframesName::Ident(ident) => {
@@ -216,10 +210,7 @@ impl<'i> KeyframesRule<'i> {
 }
 
 impl<'i> ToCss for KeyframesRule<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
     let mut first_rule = true;
@@ -230,7 +221,7 @@ impl<'i> ToCss for KeyframesRule<'i> {
           if first_rule {
             first_rule = false;
           } else {
-            if !dest.minify {
+            if !dest.options().minify {
               dest.write_char('\n')?; // no indent
             }
             dest.newline()?;
@@ -246,7 +237,7 @@ impl<'i> ToCss for KeyframesRule<'i> {
           for keyframe in &self.keyframes {
             if first {
               first = false;
-            } else if !dest.minify {
+            } else if !dest.options().minify {
               dest.write_char('\n')?; // no indent
             }
             dest.newline()?;
@@ -315,13 +306,10 @@ pub enum KeyframeSelector {
 }
 
 impl ToCss for KeyframeSelector {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       KeyframeSelector::Percentage(p) => {
-        if dest.minify && *p == Percentage(1.0) {
+        if dest.options().minify && *p == Percentage(1.0) {
           dest.write_str("to")?;
           Ok(())
         } else {
@@ -329,7 +317,7 @@ impl ToCss for KeyframeSelector {
         }
       }
       KeyframeSelector::From => {
-        if dest.minify {
+        if dest.options().minify {
           dest.write_str("0%")?;
           Ok(())
         } else {
@@ -370,10 +358,7 @@ pub struct Keyframe<'i> {
 }
 
 impl<'i> ToCss for Keyframe<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     let mut first = true;
     for selector in &self.selectors {
       if !first {

@@ -1,9 +1,10 @@
-use std::{collections::HashMap, fmt::Write};
+use std::collections::HashMap;
 
 use cssparser::*;
 use rspack_lightningcss::{
   declaration::DeclarationBlock,
   error::ParserError,
+  printer::PrinterTrait,
   rules::{CssRuleList, Location},
   stylesheet::ParserOptions,
   traits::{AtRuleParser, ToCss},
@@ -161,13 +162,10 @@ impl<'i> AtRuleParser<'i> for CustomAtRuleParser {
 }
 
 impl<'i> ToCss for AtRule<'i> {
-  fn to_css<W>(
+  fn to_css<PrinterT: PrinterTrait>(
     &self,
-    dest: &mut rspack_lightningcss::printer::Printer<W>,
-  ) -> Result<(), rspack_lightningcss::error::PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+    dest: &mut PrinterT,
+  ) -> Result<(), rspack_lightningcss::error::PrinterError> {
     dest.write_char('@')?;
     serialize_identifier(&self.name, dest)?;
     if let Some(prelude) = &self.prelude {

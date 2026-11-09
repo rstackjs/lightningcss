@@ -1,7 +1,6 @@
 //! The `@nest` rule.
 
 use smallvec::SmallVec;
-use std::fmt::Write;
 
 use super::style::StyleRule;
 use super::Location;
@@ -10,7 +9,7 @@ use crate::context::DeclarationContext;
 use crate::declaration::DeclarationBlock;
 use crate::error::{MinifyError, PrinterError};
 use crate::parser::DefaultAtRule;
-use crate::printer::Printer;
+use crate::printer::ContextAccess;
 use crate::targets::should_compile;
 use crate::traits::ToCss;
 #[cfg(feature = "visitor")]
@@ -42,13 +41,10 @@ impl<'i, T: Clone> NestingRule<'i, T> {
 }
 
 impl<'a, 'i, T: ToCss> ToCss for NestingRule<'i, T> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
-    if dest.context().is_none() {
+    if !dest.has_context() {
       dest.write_str("@nest ")?;
     }
     self.style.to_css(dest)
@@ -86,18 +82,15 @@ impl<'i> NestedDeclarationsRule<'i> {
 }
 
 impl<'i> ToCss for NestedDeclarationsRule<'i> {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     #[cfg(feature = "sourcemap")]
     dest.add_mapping(self.loc);
 
-    if should_compile!(dest.targets.current, Nesting) {
-      if let Some(context) = dest.context() {
+    dest.with_current_context(ContextAccess, |dest, context| {
+      if let Some(context) = context.filter(|_| should_compile!(dest.targets().current, Nesting)) {
         let has_printable_declarations = self.declarations.has_printable_declarations();
         if has_printable_declarations {
-          dest.with_parent_context(|dest| context.selectors.to_css(dest))?;
+          dest.with_parent_context(ContextAccess, |dest| context.selectors.to_css(dest))?;
           dest.whitespace()?;
           dest.write_char('{')?;
           dest.indent();
@@ -115,13 +108,12 @@ impl<'i> ToCss for NestedDeclarationsRule<'i> {
         }
         return Ok(());
       }
-    }
-
-    self.declarations.to_css_declarations(
-      dest,
-      false,
-      &rspack_lightningcss_selectors::SelectorList(SmallVec::new()),
-      0,
-    )
+      self.declarations.to_css_declarations(
+        dest,
+        false,
+        &rspack_lightningcss_selectors::SelectorList(SmallVec::new()),
+        0,
+      )
+    })
   }
 }

@@ -32642,14 +32642,11 @@ b\0 c');
     )
     .unwrap();
     let result = stylesheet
-      .to_css(
-        PrinterOptions {
-          minify: true,
-          analyze_dependencies: Some(Default::default()),
-          ..Default::default()
-        },
-        None::<&mut ()>,
-      )
+      .to_css(PrinterOptions {
+        minify: true,
+        analyze_dependencies: Some(Default::default()),
+        ..Default::default()
+      })
       .unwrap();
     let dependencies = result.dependencies.unwrap();
     assert_eq!(dependencies.len(), 1);
@@ -32680,13 +32677,11 @@ b\0 c');
     .unwrap();
     let mut sm = parcel_sourcemap::SourceMap::new("/");
     let result = stylesheet
-      .to_css(
-        PrinterOptions {
-          minify: true,
-          ..Default::default()
-        },
-        Some(&mut sm),
-      )
+      .to_css(PrinterOptions {
+        minify: true,
+        source_map: Some(&mut sm),
+        ..Default::default()
+      })
       .unwrap();
     let column = result.code.find(".bar").unwrap() as u32;
     let mapping = sm.find_closest_mapping(0, column).unwrap();

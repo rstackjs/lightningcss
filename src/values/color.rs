@@ -9,7 +9,6 @@ use super::percentage::Percentage;
 use crate::compat::Feature;
 use crate::error::{ParserError, PrinterError};
 use crate::macros::enum_property;
-use crate::printer::Printer;
 use crate::properties::PropertyId;
 use crate::rules::supports::SupportsCondition;
 use crate::targets::{should_compile, Browsers, Features, Targets};
@@ -22,7 +21,6 @@ use cssparser::*;
 use cssparser_color::{hsl_to_rgb, AngleOrNumber, ColorParser, NumberOrPercentage};
 use std::any::TypeId;
 use std::f32::consts::PI;
-use std::fmt::Write;
 
 /// A CSS [`<color>`](https://www.w3.org/TR/css-color-4/#color-type) value.
 ///
@@ -631,10 +629,7 @@ impl<'i> Parse<'i> for CssColor {
 }
 
 impl ToCss for CssColor {
-  fn to_css<W>(&self, dest: &mut Printer<W>) -> Result<(), PrinterError>
-  where
-    W: std::fmt::Write,
-  {
+  fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
     match self {
       CssColor::CurrentColor => {
         dest.write_str("currentColor")?;
@@ -656,10 +651,10 @@ impl ToCss for CssColor {
           }
         } else {
           // If the #rrggbbaa syntax is not supported by the browser targets, output rgba()
-          if should_compile!(dest.targets.current, HexAlphaColors) {
+          if should_compile!(dest.targets().current, HexAlphaColors) {
             // If the browser doesn't support `#rrggbbaa` color syntax, it is converted to `transparent` when compressed(minify = true).
             // https://www.w3.org/TR/css-color-4/#transparent-black
-            if dest.minify && color.red == 0 && color.green == 0 && color.blue == 0 && color.alpha == 0 {
+            if dest.options().minify && color.red == 0 && color.green == 0 && color.blue == 0 && color.alpha == 0 {
               dest.write_str("transparent")?;
               return Ok(());
             } else {
@@ -710,7 +705,7 @@ impl ToCss for CssColor {
         CssColor::from(rgb).to_css(dest)
       }
       CssColor::LightDark(light, dark) => {
-        if should_compile!(dest.targets.current, LightDark) {
+        if should_compile!(dest.targets().current, LightDark) {
           dest.write_str("var(--lightningcss-light")?;
           dest.delim(',', false)?;
           light.to_css(dest)?;
@@ -1547,17 +1542,14 @@ fn parse_legacy_alpha<'i, 't>(
 }
 
 #[inline]
-fn write_components<W>(
+fn write_components<PrinterT: crate::printer::PrinterTrait>(
   name: &str,
   a: f32,
   b: f32,
   c: f32,
   alpha: f32,
-  dest: &mut Printer<W>,
-) -> Result<(), PrinterError>
-where
-  W: std::fmt::Write,
-{
+  dest: &mut PrinterT,
+) -> Result<(), PrinterError> {
   dest.write_str(name)?;
   dest.write_char('(')?;
   if a.is_nan() {
@@ -1580,10 +1572,10 @@ where
 }
 
 #[inline]
-fn write_component<W>(c: f32, dest: &mut Printer<W>) -> Result<(), PrinterError>
-where
-  W: std::fmt::Write,
-{
+fn write_component<PrinterT: crate::printer::PrinterTrait>(
+  c: f32,
+  dest: &mut PrinterT,
+) -> Result<(), PrinterError> {
   if c.is_nan() {
     dest.write_str("none")?;
   } else {
@@ -1593,10 +1585,10 @@ where
 }
 
 #[inline]
-fn write_predefined<W>(predefined: &PredefinedColor, dest: &mut Printer<W>) -> Result<(), PrinterError>
-where
-  W: std::fmt::Write,
-{
+fn write_predefined<PrinterT: crate::printer::PrinterTrait>(
+  predefined: &PredefinedColor,
+  dest: &mut PrinterT,
+) -> Result<(), PrinterError> {
   use PredefinedColor::*;
 
   let (name, a, b, c, alpha) = match predefined {
