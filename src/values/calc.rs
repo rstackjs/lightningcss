@@ -10,6 +10,7 @@ use crate::traits::{IsCompatible, Parse, Sign, ToCss, TryMap, TryOp, TrySign};
 #[cfg(feature = "visitor")]
 use crate::visitor::Visit;
 use cssparser::*;
+use std::fmt::Write;
 
 use super::angle::Angle;
 use super::length::Length;
@@ -131,7 +132,8 @@ impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Deb
       MathFunction::Calc(calc) => {
         dest.write_str("calc(")?;
         calc.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
       MathFunction::Min(args) => {
         dest.write_str("min(")?;
@@ -144,7 +146,8 @@ impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Deb
           }
           arg.to_css(dest)?;
         }
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
       MathFunction::Max(args) => {
         dest.write_str("max(")?;
@@ -157,7 +160,8 @@ impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Deb
           }
           arg.to_css(dest)?;
         }
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
       MathFunction::Clamp(a, b, c) => {
         // If clamp() is unsupported by targets, output min()/max()
@@ -179,7 +183,8 @@ impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Deb
         b.to_css(dest)?;
         dest.delim(',', false)?;
         c.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
       MathFunction::Round(strategy, a, b) => {
         dest.write_str("round(")?;
@@ -190,31 +195,36 @@ impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Deb
         a.to_css(dest)?;
         dest.delim(',', false)?;
         b.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
       MathFunction::Rem(a, b) => {
         dest.write_str("rem(")?;
         a.to_css(dest)?;
         dest.delim(',', false)?;
         b.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
       MathFunction::Mod(a, b) => {
         dest.write_str("mod(")?;
         a.to_css(dest)?;
         dest.delim(',', false)?;
         b.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
       MathFunction::Abs(v) => {
         dest.write_str("abs(")?;
         v.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
       MathFunction::Sign(v) => {
         dest.write_str("sign(")?;
         v.to_css(dest)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
       MathFunction::Hypot(args) => {
         dest.write_str("hypot(")?;
@@ -227,7 +237,8 @@ impl<V: ToCss + std::ops::Mul<f32, Output = V> + TrySign + Clone + std::fmt::Deb
           }
           arg.to_css(dest)?;
         }
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
     }
   }

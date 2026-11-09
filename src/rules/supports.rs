@@ -1,6 +1,7 @@
 //! The `@supports` rule.
 
 use std::collections::HashMap;
+use std::fmt::Write;
 
 use super::Location;
 use super::{CssRuleList, MinifyContext};
@@ -81,7 +82,8 @@ impl<'a, 'i, T: ToCss> ToCss for SupportsRule<'i, T> {
 
     dest.dedent();
     dest.newline()?;
-    dest.write_char('}')
+    dest.write_char('}')?;
+    Ok(())
   }
 }
 
@@ -413,14 +415,20 @@ impl<'i> ToCss for SupportsCondition<'i> {
           dest.write_char(')')?;
         }
 
-        dest.write_char(')')
+        dest.write_char(')')?;
+
+        Ok(())
       }
       SupportsCondition::Selector(sel) => {
         dest.write_str("selector(")?;
         dest.write_str(sel)?;
-        dest.write_char(')')
+        dest.write_char(')')?;
+        Ok(())
       }
-      SupportsCondition::Unknown(unknown) => dest.write_str(&unknown),
+      SupportsCondition::Unknown(unknown) => {
+        dest.write_str(&unknown)?;
+        Ok(())
+      }
     }
   }
 }
