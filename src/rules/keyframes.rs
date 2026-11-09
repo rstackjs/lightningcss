@@ -211,7 +211,7 @@ impl<'i> KeyframesRule<'i> {
 
 impl<'i> ToCss for KeyframesRule<'i> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     let mut first_rule = true;
     macro_rules! write_prefix {

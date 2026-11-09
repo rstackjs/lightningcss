@@ -43,7 +43,7 @@ impl<'i> ToCss for ImportRule<'i> {
     } else {
       None
     };
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@import ")?;
     if let Some(dep) = dep {

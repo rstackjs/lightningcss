@@ -49,7 +49,7 @@ crate-type = ["rlib"]
 [features]
 default = ["bundler", "nodejs", "sourcemap"]
 browserslist = ["browserslist-rs"]
-bundler = ["dashmap", "sourcemap", "rayon"]
+bundler = ["dashmap", "custom_sourcemap", "rayon"]
 cli = ["clap", "serde_json", "browserslist", "jemallocator"]
 jsonschema = ["schemars", "serde", "rspack-lightningcss-selectors/jsonschema"]
 nodejs = ["dep:serde", "dep:serde-content"]
@@ -62,7 +62,9 @@ serde = [
   "rspack-lightningcss-selectors/serde",
   "into_owned",
 ]
-sourcemap = ["parcel_sourcemap"]
+# Keep the existing feature name as a compatibility alias.
+sourcemap = ["custom_sourcemap"]
+custom_sourcemap = ["parcel_sourcemap"]
 visitor = []
 into_owned = [
   "rspack-lightningcss-static-self",

@@ -32661,7 +32661,7 @@ b\0 c');
   }
 
   #[test]
-  #[cfg(feature = "sourcemap")]
+  #[cfg(feature = "custom_sourcemap")]
   fn test_url_quoting_source_map() {
     let stylesheet = StyleSheet::parse(
       r#"
@@ -32699,7 +32699,7 @@ b\0 c');
   }
 
   #[test]
-  #[cfg(feature = "sourcemap")]
+  #[cfg(feature = "custom_sourcemap")]
   fn test_input_source_map() {
     let source = r#".imported {
       content: "yay, file support!";
@@ -32734,7 +32734,7 @@ b\0 c');
   }
 
   #[test]
-  #[cfg(feature = "sourcemap")]
+  #[cfg(feature = "custom_sourcemap")]
   fn test_source_maps_with_license_comments() {
     let source = r#"/*! a single line comment */
     /*!

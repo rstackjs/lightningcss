@@ -65,7 +65,7 @@ impl<'i, T: Clone> ScopeRule<'i, T> {
 
 impl<'i, T: ToCss> ToCss for ScopeRule<'i, T> {
   fn to_css<PrinterT: crate::printer::PrinterTrait>(&self, dest: &mut PrinterT) -> Result<(), PrinterError> {
-    #[cfg(feature = "sourcemap")]
+    #[cfg(feature = "custom_sourcemap")]
     dest.add_mapping(self.loc);
     dest.write_str("@scope")?;
     dest.whitespace()?;
